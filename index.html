@@ -37,6 +37,14 @@ body.scan-immersive .scanframe{inset:16% 10% 23%}
 </style><style>
 .inspect-monitor{margin:10px 0;padding:13px;border:1px solid #cdddec;border-radius:13px;background:#f2f8ff;color:#17324a}.inspect-monitor .inspect-line{display:flex;align-items:center;gap:9px;font-weight:750}.inspect-led{width:11px;height:11px;background:#94a3b8;border-radius:50%;flex:none}.inspect-led.running{background:#16a34a;box-shadow:0 0 0 4px #16a34a22;animation:inspectPulse 1.5s infinite}.inspect-led.waiting{background:#eab308}.inspect-led.error{background:#dc2626}.inspect-meta{font-size:12px;margin-top:8px;line-height:1.7;color:#38546a}.inspect-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:9px}.inspect-grid>div{background:white;border-radius:8px;padding:8px;font-size:12px}.inspect-grid b{display:block;font-size:16px;color:#123c62}@keyframes inspectPulse{50%{box-shadow:0 0 0 8px #16a34a0a}}
 .ai-mini{display:inline-flex;align-items:center;gap:6px;background:#102a42d9;color:white;border:1px solid #ffffff44;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:700;white-space:nowrap}.ai-mini .inspect-led{width:8px;height:8px}.camtop{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.camtop .ai-mini{margin-left:auto}
+</style><style>
+.record-photo-btn{display:block;width:100%;max-width:340px;margin:10px 0;border:1px solid #dce5ef;border-radius:13px;padding:6px;background:#fff;text-align:left;cursor:pointer;overflow:hidden}
+.record-photo-btn img{display:block;width:100%;max-height:220px;object-fit:contain;background:#152235}
+.record-photo-btn span{display:block;padding:8px;font-size:12px;color:#245c9b;font-weight:750}
+.photo-viewer{display:none;position:fixed;inset:0;z-index:20000;background:#07111df2;align-items:center;justify-content:center;padding:12px}
+.photo-viewer.show{display:flex}.photo-viewer-inner{width:min(100%,900px);max-height:95dvh;display:flex;flex-direction:column;color:white;gap:10px}
+.photo-viewer-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.photo-viewer-head p{margin:4px 0;color:#cbd9e9;font-size:13px}.photo-viewer-head button{border:1px solid #ffffff55;border-radius:10px;padding:10px 12px;color:#fff;background:#20334c;white-space:nowrap}
+.photo-viewer-inner>img{display:block;max-width:100%;max-height:75dvh;object-fit:contain;border-radius:10px}.photo-viewer-note{font-size:12px;color:#bdcfe2;margin:0;line-height:1.5}
 </style></head><body><div id="aiPrepare" class="ai-prepare" role="dialog" aria-modal="true" aria-labelledby="prepareTitle" aria-live="polite"><div class="prepare-card"><div class="prepare-mark">✳</div><h2 class="prepare-title" id="prepareTitle">AI 안전점검이 곧 시작됩니다</h2><div class="prepare-spinner" id="prepareSpinner"></div><p class="prepare-detail" id="prepareDetail">AI 분석 기능을 준비하고 있습니다.</p><p class="prepare-small">첫 실행 시 무료 AI 모델을 다운로드하므로 시간이 걸릴 수 있습니다.<br>Wi-Fi 연결을 권장합니다.</p><div class="prepare-error" id="prepareError"><div id="prepareErrorText"></div><button type="button" onclick="prepareInspection()">다시 시도</button><button type="button" onclick="cancelPreparation()">돌아가기</button></div></div></div><div class="app"><header class="top"><div class="brand"><span class="logo">✳</span>오산 <span style="color:#126ce9">AI 안전점검</span></div><small>시민과 함께하는 시설물 위험징후 기록 서비스 · 시제품</small></header><nav class="nav" aria-label="서비스 메뉴"><button id="nav-home" class="on" onclick="go('home')">⌂ 홈</button><button id="nav-form" onclick="go('form')">📷 AI 안전점검</button><button id="nav-records" onclick="go('recordsTab')">📝 관찰 사항 기록</button><button id="nav-compare" onclick="go('compare')">📏 균열 변화 비교</button><button id="nav-expert" onclick="go('expert')">👷 전문가에게 문의</button></nav><main class="main">
 <section id="home" class="screen active"><div class="hero"><div><span class="pill">SMART SAFETY · OSAN</span><h1>우리 건물의 안전,<br>스마트폰으로 살펴보세요.</h1><p>카메라로 건물 곳곳을 확인하고, 무료 부위별 점검 안내를 받으며 위험 징후를 직접 기록하세요. 과거 기록과 비교해 변화도 살펴볼 수 있습니다.</p><button class="btn white" onclick="go('form')">안전점검 시작하기 →</button></div><div class="hero-art">🏢<span style="font-size:60px;margin-left:-50px;margin-top:100px">🔎</span></div></div><div style="margin-top:14px"><button class="btn outline" onclick="go('expert')">👷 전문가에게 문의하기 →</button></div><div class="features"><div class="tile"><div class="ico">📷</div><b>카메라 점검</b><p>시설물 부위를 비추고 촬영하여 손상 징후를 기록합니다.</p></div><div class="tile"><div class="ico">🧱</div><b>부위별 점검 가이드</b><p>벽체·기둥·계단·난간·옹벽 등 부위별 확인사항을 안내합니다.</p></div><div class="tile"><div class="ico">📋</div><b>점검 결과 저장</b><p>사진과 관찰 내용을 저장하고 결과를 내려받습니다.</p></div></div><p class="muted" style="margin:20px 4px">※ AI가 균열·박락·부식 등 손상 의심 징후를 살펴보는 개발 시제품입니다. 손상을 놓치거나 잘못 표시할 수 있으므로 직접 확인이 필요합니다. 법정 안전점검·정밀안전진단 또는 구조안전 판정을 대체하지 않습니다.</p></section>
 <section id="form" class="screen"><div class="sectionhead"><div><h2>건물 기본정보 입력</h2><p>건물 정보를 입력하면 부위별 확인사항을 안내합니다.</p></div><span class="steps">01 건물정보 → 02 카메라 점검 → 03 결과</span></div><div class="panel"><form id="buildingForm" class="formgrid"><div><label for="bname">건물명 *</label><input id="bname" required placeholder="예: 우리아파트 101동" maxlength="70"></div><div><label for="btype">건물 용도 *</label><select id="btype" required><option value="">선택해주세요</option><option>공동주택</option><option>단독주택</option><option>근린생활시설</option><option>업무시설</option><option>교육시설</option><option>기타</option></select></div><div><label for="byear">준공연도 (선택)</label><input id="byear" type="number" min="1900" max="2100" placeholder="예: 2008"></div><div><label for="bfloors">지상 층수 (선택)</label><input id="bfloors" type="number" min="1" max="200" placeholder="예: 15"></div><div><label for="bstructure">구조형식 (아는 경우만)</label><select id="bstructure"><option>모름</option><option>철근콘크리트조</option><option>철골조</option><option>조적조</option><option>목조</option><option>기타</option></select></div><div><label for="barea">점검 위치 (선택)</label><input id="barea" placeholder="예: 1층 계단실, 외벽 동측"></div><div class="full"><label for="bnote">특이사항 (선택)</label><textarea id="bnote" rows="2" placeholder="예: 최근 벽면 균열이 눈에 띄기 시작함"></textarea></div></form><div class="note" style="margin-top:18px">건물명과 입력 정보는 이 기기의 브라우저에만 보관됩니다. 주소나 거주자 정보 등 불필요한 개인정보는 입력하지 마세요. 구조형식을 모르면 '모름'으로 두어도 됩니다.</div><div class="actions"><button class="btn outline" onclick="go('home')">이전</button><button class="btn" onclick="startInspection()">카메라 점검 시작 →</button></div></div></section>
@@ -61,10 +69,10 @@ body.scan-immersive .scanframe{inset:16% 10% 23%}
 </form><footer>오산 AI 안전점검 v20 · 방향 표시 수정 및 손상 의심 선별 개선 · 기능 검증용 시제품 · 공식 오산시 운영 서비스가 아닙니다.</footer></div><canvas id="snapshot" class="hidden"></canvas><script>
 const areaGuides={"벽체":"벽면의 균열 방향·길이·위치, 누수·백화, 마감재 들뜸을 확인하세요. 내력벽 여부는 영상만으로 판단할 수 없으며 구조도면 등의 확인이 필요합니다.","기둥·보":"기둥·보의 균열, 콘크리트 박락, 철근 노출, 변형 징후를 관찰하세요. 구조부재 손상이 의심되면 전문가 확인이 필요합니다.","계단실":"계단실 벽체 균열, 계단 디딤판 파손, 미끄럼 위험, 난간의 연속성과 고정 상태를 확인하세요. 계단실 벽이 모두 내력벽인 것은 아닙니다.","난간":"계단·복도·발코니의 난간 존재 여부, 파손, 흔들림, 틈새를 살펴보세요. 법적 설치 기준 충족 여부는 현장 치수와 용도에 따라 별도 검토가 필요합니다.","외벽":"외벽의 균열, 마감재 들뜸·탈락, 누수 흔적을 살펴보세요. 낙하 위험이 의심되면 아래쪽 접근을 피하세요.","옹벽":"옹벽 균열, 배부름·기울어짐, 배수구 막힘, 토사 유실을 확인하세요. 영상만으로 변위를 계측하거나 안전성을 판정할 수 없습니다.","바닥":"바닥의 균열·침하·단차·들뜸 등 이상 징후를 확인하세요. 위험이 의심되면 접근하지 말고 전문가에게 확인받으세요.","천장":"천장의 균열·누수·박락·처짐 등 이상 징후를 확인하세요. 낙하 위험이 의심되면 아래쪽 접근을 피하세요.","기타":"시설물의 위치와 손상 양상을 기록하세요. 보이지 않는 내부 결함은 사진만으로 확인할 수 없습니다."};
 let area='벽체',stream=null,photo=null,records=[],building={};
-const autoLastAt={};let defectClassHits={spall:0,rust:0};const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function go(id){document.body.classList.toggle('scan-immersive',id==='scan');document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.id===id));document.querySelectorAll('.nav button').forEach(e=>e.classList.toggle('on',e.id==='nav-'+(id==='scan'||id==='report'?'form':id)));window.scrollTo(0,0);if(id!=='scan'){stopLive(false);stopCamera()}if(id==='compare')renderCrackHistory()}
+const autoLastAt={};let defectClassHits={spall:0,rust:0};const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function go(id,skipCamera=false){document.body.classList.toggle('scan-immersive',id==='scan');document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.id===id));document.querySelectorAll('.nav button').forEach(e=>e.classList.toggle('on',e.id==='nav-'+(id==='scan'||id==='report'?'form':id)));window.scrollTo(0,0);if(id!=='scan'){stopLive(false);stopCamera()}if(id==='compare')renderCrackHistory();if(id==='scan'&&!skipCamera&&!stream){setTimeout(()=>{if($('scan').classList.contains('active')&&!stream&&!preparing)openCamera()},100)}}
 let scanCycleStart=0,scanCycleCrackStart=0,scanCycleDone=false,scanCycleArea='';let areaAnnouncementUntil=0;function announceAreaChange(a){areaAnnouncementUntil=Date.now()+4500;const msg=a+(a==='벽체'||a==='바닥'||a==='천장'||a==='외벽'||a==='옹벽'?'를':'을')+' 점검합니다.';if(liveEnabled)voiceSay(msg,'area');const el=$('captionText');if(el)el.textContent=msg;const sub=$('captionSub');if(sub)sub.textContent='점검 부위가 변경되었습니다.';const tag=$('captionArea');if(tag)tag.textContent=a+' · 점검 중';}function exitImmersiveScan(){go('recordsTab');}function renderAreas(){$('areas').innerHTML=Object.keys(areaGuides).map(a=>`<button class="checkbtn ${a===area?'selected':''}" onclick="selectArea('${a}')">${a}</button>`).join('');$('guide').textContent=areaGuides[area];$('areaTag').textContent=area;const sel=$('scanAreaSelect');if(sel)sel.value=area}function selectArea(a){const changed=area!==a;area=a;renderAreas();if(changed){scanCycleStart=Date.now();scanCycleCrackStart=inspectCrackCount;scanCycleDone=false;scanCycleArea=a;announceAreaChange(a)}else guidePrompt()}renderAreas();
 function startInspection(){if(!$('buildingForm').reportValidity())return;building={name:$('bname').value.trim(),type:$('btype').value,year:$('byear').value,floors:$('bfloors').value,structure:$('bstructure').value,location:$('barea').value,note:$('bnote').value};records=[];Object.keys(autoLastAt).forEach(k=>delete autoLastAt[k]);defectClassHits={spall:0,rust:0};crackCandidate=null;crackStable=0;crackHits=0;aiObservations=[];aiAreaSeen=new Set();photo=null;$('photoPreview').classList.add('hidden');$('photoEmpty').classList.remove('hidden');renderRecords();enableOrientation();$('scanBuilding').textContent=building.name+' · '+building.type+' · 관찰 부위를 선택하고 촬영하세요.';prepareInspection()}
-async function openCamera(){stopCamera();if(!navigator.mediaDevices?.getUserMedia){$('camfallback').innerHTML='<div class="big">🔒</div>카메라를 사용할 수 없습니다.<br>HTTPS 환경 또는 localhost에서 열어보세요.<br>사진 선택 기능은 계속 사용할 수 있습니다.';return}try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});$('video').srcObject=stream;$('video').style.display='block';$('camfallback').classList.add('hidden');$('video').onloadedmetadata=()=>{if(stream&&!liveEnabled)startLive()};$('video').play().catch(()=>{});if($('video').videoWidth)startLive()}catch(e){$('camfallback').innerHTML='<div class="big">📷</div>카메라 연결에 실패했습니다.<br>브라우저 권한을 확인하거나 사진 선택을 이용하세요.';$('camfallback').classList.remove('hidden')}}function stopCamera(){stopLive();if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('video').srcObject=null;$('video').style.display='none';$('camfallback').classList.remove('hidden')}
+async function openCamera(){stopCamera();if(!navigator.mediaDevices?.getUserMedia){$('camfallback').innerHTML='<div class="big">🔒</div>카메라를 사용할 수 없습니다.<br>HTTPS 환경 또는 localhost에서 열어보세요.<br>사진 선택 기능은 계속 사용할 수 있습니다.';return}try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});$('video').srcObject=stream;$('video').style.display='block';$('camfallback').classList.add('hidden');$('video').onloadedmetadata=()=>{if(stream&&!liveEnabled)startLive()};$('video').play().catch(()=>{});if($('video').videoWidth)startLive()}catch(e){$('camfallback').innerHTML='<div class="big">📷</div>카메라를 열지 못했습니다.<br>브라우저 카메라 권한을 확인한 뒤 다시 시도해 주세요.<br><button onclick="openCamera()">다시 연결</button>';$('camfallback').classList.remove('hidden')}}function stopCamera(){stopLive();if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('video').srcObject=null;$('video').style.display='none';$('camfallback').classList.remove('hidden')}
 function setPhoto(data){photo=data;measureSetImage(data);$('photoPreview').src=data;$('photoPreview').classList.remove('hidden');$('photoEmpty').classList.add('hidden')}function downloadCurrentPhoto(){
  if(!photo){alert('먼저 사진을 촬영해 주세요.');return;}
  const a=document.createElement('a');a.href=photo;
@@ -86,7 +94,13 @@ function addAutoFinding(kind,detail){
  renderRecords();return true;
 }
 function addRecord(){const finding=$('finding').value,memo=$('memo').value.trim(),width=$('width').value;if(!finding){alert('관찰한 상태를 선택해주세요.');return}if(width!==''&&(!Number.isFinite(Number(width))||Number(width)<0)){alert('측정값을 확인해주세요.');return}records.push({id:Date.now()+Math.random(),area,finding,memo,width:width===''?null:Number(width),at:new Date().toISOString(),photo,source:'manual'});$('finding').value='';$('width').value='';$('memo').value='';renderRecords()}
-function renderRecords(){$('count').textContent=records.length;$('records').innerHTML=records.length?records.map((r,i)=>`<div class="record"><strong>${i+1}. ${r.source==='ai'?'[AI 의심 · 미확인] ':'[직접 기록] '}${esc(r.area)} · ${esc(r.finding)}</strong><p>${r.width!==null?'입력 측정값: '+r.width+' mm<br>':''}${esc(r.memo||'메모 없음')}</p><button class="btn danger" style="padding:6px 9px;font-size:11px" onclick="removeRecord(${i})">삭제</button></div>`).join(''):'<p class="muted">아직 기록이 없습니다.</p>'}function removeRecord(i){records.splice(i,1);renderRecords()}function finish(){$('rbuilding').textContent=building.name;$('rcount').textContent=records.length+'건 (AI '+records.filter(r=>r.source==='ai').length+'건)';$('rdate').textContent=new Date().toLocaleString('ko-KR');$('reportRecords').innerHTML=records.length?records.map((r,i)=>`<div class="record"><strong>${i+1}. ${r.source==='ai'?'[AI 의심 · 미확인] ':'[직접 기록] '}${esc(r.area)} · ${esc(r.finding)}</strong><p>${new Date(r.at).toLocaleString('ko-KR')}<br>${r.width!==null?'사용자 입력 측정값 '+r.width+'mm<br>':''}${esc(r.memo||'')}</p>${r.photo?`<img class="preview" alt="기록 사진" src="${r.photo}">`:''}</div>`).join(''):'<p class="muted">기록된 관찰사항이 없습니다.</p>';go('report');generateAISummary()}
+function widthDisplay(r){if(r.width!==null&&r.width!==undefined)return '실측 입력값 '+Number(r.width).toFixed(2)+' mm';if(r.pixelWidth!=null)return '영상상 폭 약 '+Number(r.pixelWidth).toFixed(1)+' px · mm 미측정';if(r.finding==='균열 의심')return 'mm 미측정 · 기준 거리 보정 필요';return ''}
+function recordPhotoHtml(r,i){return r.photo?`<button class="record-photo-btn" onclick="openPhotoViewer(${i})" aria-label="${i+1}번 점검 사진 크게 보기"><img class="preview" alt="${esc(r.area)} 균열 의심 촬영 사진" src="${r.photo}"><span>↗ 사진 크게 보기 · 표시된 균열 후보 확인</span></button>`:''}
+function openPhotoViewer(i){const r=records[i];if(!r?.photo)return;const modal=$('photoViewer');$('photoViewerImage').src=r.photo;$('photoViewerTitle').textContent=r.area+' · '+r.finding;$('photoViewerMeasure').textContent=widthDisplay(r)||'측정값 없음';modal.classList.add('show');document.body.style.overflow='hidden'}
+function closePhotoViewer(){const modal=$('photoViewer');modal.classList.remove('show');$('photoViewerImage').removeAttribute('src');document.body.style.overflow=''}
+function renderRecords(){$('count').textContent=records.length;$('records').innerHTML=records.length?records.map((r,i)=>`<div class="record"><strong>${i+1}. ${r.source==='ai'?'[AI 의심 · 미확인] ':'[직접 기록] '}${esc(r.area)} · ${esc(r.finding)}</strong><p>${widthDisplay(r)?'<b>'+esc(widthDisplay(r))+'</b><br>':''}${esc(r.memo||'메모 없음')}</p>${recordPhotoHtml(r,i)}<button class="btn danger" style="padding:6px 9px;font-size:11px" onclick="removeRecord(${i})">삭제</button></div>`).join(''):'<p class="muted">아직 기록이 없습니다.</p>'}
+function removeRecord(i){records.splice(i,1);renderRecords()}
+function finish(){$('rbuilding').textContent=building.name;$('rcount').textContent=records.length+'건 (AI '+records.filter(r=>r.source==='ai').length+'건)';$('rdate').textContent=new Date().toLocaleString('ko-KR');$('reportRecords').innerHTML=records.length?records.map((r,i)=>`<div class="record"><strong>${i+1}. ${r.source==='ai'?'[AI 의심 · 미확인] ':'[직접 기록] '}${esc(r.area)} · ${esc(r.finding)}</strong><p>${new Date(r.at).toLocaleString('ko-KR')}<br>${widthDisplay(r)?'<b>'+esc(widthDisplay(r))+'</b><br>':''}${esc(r.memo||'')}</p>${recordPhotoHtml(r,i)}</div>`).join(''):'<p class="muted">기록된 관찰사항이 없습니다.</p>';go('report');generateAISummary()}
 function generateAISummary(){
  const badge=$('riskBadge'),txt=$('aiSummary'),details=$('aiDetails'),expert=$('requestExpertRisk');
  const serious=['철근 노출 의심','부식 의심','콘크리트 박락 의심','처짐·기울어짐 의심','난간 누락·파손 의심','마감재 탈락 위험 의심'];
@@ -250,7 +264,7 @@ async function submitExpertRequest(){
      if(logits.length!==w*h)throw new Error('예상과 다른 모델 출력 크기');
      // Suppress isolated pixel noise before any red overlay is shown.
      // Keep only coherent, elongated connected regions, not scattered raw mask pixels.
-     const oc=$('defectOverlay');oc.width=w;oc.height=h;const octx=oc.getContext('2d');
+     const oc=$('defectOverlay'),box=$('cameraBox');const dpr=Math.min(2,window.devicePixelRatio||1);const vw=box.clientWidth,vh=box.clientHeight;oc.width=Math.round(vw*dpr);oc.height=Math.round(vh*dpr);const octx=oc.getContext('2d');octx.setTransform(dpr,0,0,dpr,0,0);
      const strong=new Uint8Array(w*h),visited=new Uint8Array(w*h);
      // Threshold is intentionally conservative. Model output may be logits or probabilities.
      let sampledMax=-Infinity,sampledMin=Infinity;
@@ -302,9 +316,29 @@ async function submitExpertRequest(){
        autoCrackEstimate={pixels:thicknessPx, modelWidth:512, bounds:best, at:new Date().toISOString()};
        // Only draw a conservative bounding rectangle around the stable candidate.
        // Never paint unfiltered raw mask pixels all over the camera feed.
-       octx.strokeStyle='rgba(255,65,55,.9)';octx.lineWidth=3;
-       octx.strokeRect(Math.max(0,best.minx-7),Math.max(0,best.miny-7),
-         Math.min(w-best.minx,best.maxx-best.minx+15),Math.min(h-best.miny,best.maxy-best.miny+15));
+       // The overlay must stay INSIDE the blue inspection guide, not cover the rest of the screen.
+       const guide=box.querySelector('.scanframe');const frame=guide.getBoundingClientRect(),camera=box.getBoundingClientRect();
+       const gx=frame.left-camera.left,gy=frame.top-camera.top,gw=frame.width,gh=frame.height;
+       // video uses object-fit:cover; map the 512x512 model's normalized video coordinates to the visible camera.
+       const vr=v.videoWidth/v.videoHeight,cr=vw/vh;
+       const displayW=vr>cr?vh*vr:vw,displayH=vr>cr?vh:vw/vr;
+       const offsetX=(vw-displayW)/2,offsetY=(vh-displayH)/2;
+       const x1=offsetX+(best.minx-5)/512*displayW,y1=offsetY+(best.miny-5)/512*displayH;
+       const x2=offsetX+(best.maxx+6)/512*displayW,y2=offsetY+(best.maxy+6)/512*displayH;
+       octx.save();octx.beginPath();octx.rect(gx,gy,gw,gh);octx.clip();
+       // Refined rounded corner indicators, no oversized solid red rectangle.
+       const bx=Math.max(gx+3,x1),by=Math.max(gy+3,y1),br=Math.min(gx+gw-3,x2),bb=Math.min(gy+gh-3,y2);
+       if(br>bx+6&&bb>by+6){
+         const cw=Math.min(19,(br-bx)*.35),ch=Math.min(19,(bb-by)*.35);
+         octx.strokeStyle='rgba(255,255,255,.85)';octx.lineWidth=4;octx.lineCap='round';octx.lineJoin='round';
+         const corners=()=>{octx.beginPath();octx.moveTo(bx+cw,by);octx.lineTo(bx,by);octx.lineTo(bx,by+ch);octx.moveTo(br-cw,by);octx.lineTo(br,by);octx.lineTo(br,by+ch);octx.moveTo(bx,bb-ch);octx.lineTo(bx,bb);octx.lineTo(bx+cw,bb);octx.moveTo(br-cw,bb);octx.lineTo(br,bb);octx.lineTo(br,bb-ch);octx.stroke()};
+         corners();octx.strokeStyle='#ff625f';octx.lineWidth=2.4;corners();
+         const label='균열 의심';octx.font='700 12px system-ui';const lw=octx.measureText(label).width+22;
+         const lx=Math.max(gx+5,Math.min(br-lw,gx+gw-lw-5)),ly=Math.max(gy+5,by-28);
+         octx.fillStyle='rgba(23,37,58,.90)';octx.beginPath();octx.roundRect(lx,ly,lw,23,7);octx.fill();
+         octx.fillStyle='#fff';octx.fillText(label,lx+11,ly+16);
+       }
+       octx.restore();
        defectMessage('⚠ 반복 확인된 균열 의심 영역 · 빨간 테두리 · 실제 균열인지 현장 확인 필요','warn');
        addAutoFinding('균열 의심','균열 전용 모델에서 반복 탐지(오탐 가능). 픽셀 폭 추정은 캡처 사진 아래에서 확인; mm 측정은 눈금자 보정 필요');
        const msg='같은 화면 위치에서 균열 의심 영역이 반복 탐지되었습니다. 실제 균열인지 가까이서 확인해 주세요.';
@@ -334,7 +368,7 @@ async function submitExpertRequest(){
    if(prepareCancelled)return;
    $('prepareDetail').textContent='AI 준비가 완료되었습니다. 카메라를 연결합니다.';
    $('aiPrepare').classList.remove('show');
-   go('scan');guidePrompt();await openCamera();
+   go('scan',true);guidePrompt();await openCamera();
   }catch(e){
    if(prepareCancelled)return;
    $('prepareTitle').textContent='AI 준비에 실패했습니다';
@@ -449,7 +483,11 @@ function annotateCrackCandidate(){
   const left=Math.max(0,(b.minx-5)*sx),top=Math.max(0,(b.miny-5)*sy);
   const right=Math.min(c.width,(b.maxx+6)*sx),bottom=Math.min(c.height,(b.maxy+6)*sy);
   ctx.lineWidth=Math.max(3,c.width/350);ctx.strokeStyle='#fa4848';
-  ctx.strokeRect(left,top,right-left,bottom-top);
+  const seg=Math.min(25,(right-left)*.35,(bottom-top)*.35);ctx.beginPath();
+  ctx.moveTo(left+seg,top);ctx.lineTo(left,top);ctx.lineTo(left,top+seg);
+  ctx.moveTo(right-seg,top);ctx.lineTo(right,top);ctx.lineTo(right,top+seg);
+  ctx.moveTo(left, bottom-seg);ctx.lineTo(left,bottom);ctx.lineTo(left+seg,bottom);
+  ctx.moveTo(right-seg,bottom);ctx.lineTo(right,bottom);ctx.lineTo(right,bottom-seg);ctx.stroke();
   const centerY=(top+bottom)/2,centerX=(left+right)/2;
   // An arrow/leader points to the candidate bounding region; it is not a measured edge pair.
   const tx=Math.max(12,Math.min(c.width-12,centerX+(centerX<c.width*.6?90:-90)));
@@ -468,6 +506,8 @@ function annotateCrackCandidate(){
 function captureCandidate(){
  if(stream&&$('video').videoWidth){
   if(autoCrackEstimate?.bounds)annotateCrackCandidate();else capture();
+  const recent=[...records].reverse().find(r=>r.source==='ai'&&r.finding==='균열 의심'&&Date.now()-new Date(r.at).getTime()<120000);
+  if(recent){recent.photo=photo;recent.pixelWidth=autoCrackEstimate?.pixels??null;recent.widthUnit='px';recent.measurementStatus='mm 미측정 · 거리 보정 필요';renderRecords()}
   showAutoPixelEstimate();candidateCount++;
   $('candidateStatus').textContent='균열 의심 사진을 저장했습니다. 빨간 테두리는 AI 후보 위치, px는 영상상 폭입니다. mm는 보정 전이므로 표시하지 않습니다.';
  }else $('candidateStatus').textContent='먼저 카메라를 켜주세요.';
@@ -512,4 +552,4 @@ function measureSave(){if(!Number.isFinite(measureWidth)||measureWidth===null){a
 $('measureCanvas').addEventListener('click',measureClick);
 $('referenceMm').addEventListener('change',()=>{if(measurePoints.length===4)measureCalculate()});
 measureDraw();
-</script></body></html>
+</script><div class="photo-viewer" id="photoViewer" role="dialog" aria-modal="true" aria-label="점검 사진 확대" onclick="if(event.target===this)closePhotoViewer()"><div class="photo-viewer-inner"><div class="photo-viewer-head"><div><b id="photoViewerTitle">균열 의심 사진</b><p id="photoViewerMeasure">mm 미측정</p></div><button type="button" onclick="closePhotoViewer()" aria-label="사진 닫기">✕ 닫기</button></div><img id="photoViewerImage" alt="확대한 균열 촬영 사진"><p class="photo-viewer-note">사진의 표시는 AI 의심 영역과 영상상 픽셀 추정치입니다. 실제 mm 폭은 보정·검증되지 않았습니다.</p></div></div></body></html>
