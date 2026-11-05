@@ -43,7 +43,7 @@ body.scan-immersive .scanframe{inset:16% 10% 23%}
 <section id="scan" class="screen"><div class="sectionhead"><div><h2>카메라 안전점검</h2><p id="scanBuilding">시설물을 천천히 확인하고 관찰한 사항을 기록하세요.</p></div><span class="steps">02 카메라 점검</span></div><div class="scanlayout"><div><div class="camera" id="cameraBox"><video id="video" autoplay playsinline muted></video><div class="camfallback" id="camfallback"><div class="big">📷</div><b>카메라 연결 대기</b><p style="font-size:13px;line-height:1.8">카메라 접근을 허용하면 영상이 표시됩니다.<br>PC에서는 사진 파일을 불러올 수도 있습니다.</p></div><div class="scanframe"></div><canvas id="defectOverlay" class="defect-overlay" aria-label="실험적 균열 탐지 영역 표시"></canvas><div class="camtop"><span class="camtag">● 현장 관찰 모드</span><span class="ai-mini" id="inspectMini" role="status" aria-live="polite"><span class="inspect-led" id="inspectLed"></span><span id="inspectHeadline">AI 대기</span></span><span class="camtag" id="areaTag">벽체</span></div><div class="scan-float-controls"><select id="scanAreaSelect" aria-label="점검 부위 직접 선택" onchange="selectArea(this.value)"><option>벽체</option><option>바닥</option><option>천장</option><option>기둥·보</option><option>계단실</option><option>난간</option><option>외벽</option><option>옹벽</option><option>기타</option></select><button id="scanVoiceBtn" onclick="toggleScanVoice()" aria-label="음성 안내 켜기 또는 끄기">🔊 음성</button><button onclick="capture()">📸 촬영</button><button class="scan-exit" onclick="exitImmersiveScan()">점검 종료 ✕</button></div><div class="camfoot"><button onclick="openCamera()">📹 카메라 켜기</button><button onclick="capture()">📸 촬영</button><button onclick="document.getElementById('fileInput').click()">🖼 사진 선택</button><input id="fileInput" class="hidden" type="file" accept="image/*" capture="environment" onchange="loadPhoto(event)"></div></div><div class="caption-panel" id="captionPanel" role="status" aria-live="polite"><div class="caption-kicker"><span>✦ 무료 현장 점검 안내</span><span id="captionArea">벽체 · 대기</span></div><div class="caption-text" id="captionText">현재 점검할 벽체를 비춰주세요.</div><div class="caption-sub" id="captionSub">무료 안내 모드: 선택한 점검 부위의 확인사항을 자막으로 안내합니다. 카메라 영상을 AI가 자동 판독하지는 않습니다.</div></div><div class="panel" style="margin:10px 0"><div class="livehead"><b>무료 점검 안내</b><span id="liveStatus" class="livebadge">카메라 대기</span></div><p class="hint">카메라 화면은 외부 서버에 전송하지 않습니다. 부위를 선택하면 점검 항목이 자막으로 표시되며, 발견한 이상은 관찰 사항 기록 탭에 직접 기록하세요.</p><div class="liveactions"><button class="btn" id="liveStart" onclick="startLive()">▶ 안내 다시 시작</button><button class="btn outline" id="liveStop" onclick="stopLive()" disabled>■ 안내 중지</button></div><label style="margin-top:12px"><input id="voiceOn" type="checkbox" checked style="width:auto;margin-right:6px">음성 안내</label><div id="liveFeed" class="livefeed" aria-live="polite" style="display:none"></div></div><span id="candidateStatus" class="hidden" aria-hidden="true"></span><div class="sensor-panel"><b>📐 휴대폰 방향 센서</b> · <span id="orientationStatus">센서 대기</span><p class="hint">GPS가 아닌 기울기 센서로 촬영 방향을 추정합니다. 카메라 종류·기기 방향에 따라 오차가 있으므로 실제 부위와 대조하세요.</p><label><input type="checkbox" id="autoArea" checked style="width:auto"> 방향 센서로 천장·벽체·바닥 구분 (추정)</label></div>
 <div id="defectStatus" class="defect-status">AI가 점검 부위의 손상 징후를 확인할 준비를 하고 있습니다.</div>
 <div class="minirow" style="margin:8px 0 12px"><button class="btn outline" onclick="retryDefectModel()">🔄 AI 분석 다시 준비</button><label style="display:flex;align-items:center;gap:5px"><input id="autoDefectCapture" type="checkbox" checked style="width:auto"> 반복 탐지 시 자동 캡처</label></div>
-<div class="panel" style="margin:12px 0"><label for="crackSensitivity"><b>균열 탐지 민감도</b> <span id="crackSensitivityLabel">균형</span></label><input type="range" id="crackSensitivity" min="0" max="2" value="1" step="1" style="width:100%" oninput="updateCrackSensitivity()"><p class="hint">낮음: 오탐을 줄임 · 균형: 기본 · 높음: 미세균열 후보를 더 많이 확인하지만 줄눈·그림자 오탐이 증가할 수 있습니다.</p></div><div class="panel" style="margin-top:14px"><h3>촬영한 사진</h3><div id="photoEmpty" class="muted">촬영하거나 사진을 선택하면 이곳에 표시됩니다.</div><img id="photoPreview" class="preview hidden" alt="점검 촬영 사진"><div class="measuretools"><button class="btn outline" onclick="downloadCurrentPhoto()">📥 촬영 사진 저장 (AI 표시 포함)</button></div><p class="hint">카메라 화면은 외부 분석 서버로 전송하지 않습니다. 최초 AI 모델은 외부 CDN에서 다운로드합니다.</p></div><div class="measurebox" id="measureBox"><h3>📐 균열 의심 사진 · 치수선 표시 및 폭 분석</h3>
+<div class="panel" style="margin:12px 0"><label for="crackSensitivity"><b>균열 탐지 민감도</b> <span id="crackSensitivityLabel">높음</span></label><input type="range" id="crackSensitivity" min="0" max="2" value="2" step="1" style="width:100%" oninput="updateCrackSensitivity()"><p class="hint">기본값은 높음으로 설정했습니다. 오탐이 많으면 낮춰주세요. 낮음: 오탐을 줄임 · 균형: 기본 · 높음: 미세균열 후보를 더 많이 확인하지만 줄눈·그림자 오탐이 증가할 수 있습니다.</p></div><div class="panel" style="margin-top:14px"><h3>촬영한 사진</h3><div id="photoEmpty" class="muted">촬영하거나 사진을 선택하면 이곳에 표시됩니다.</div><img id="photoPreview" class="preview hidden" alt="점검 촬영 사진"><div class="measuretools"><button class="btn outline" onclick="downloadCurrentPhoto()">📥 촬영 사진 저장 (AI 표시 포함)</button></div><p class="hint">카메라 화면은 외부 분석 서버로 전송하지 않습니다. 최초 AI 모델은 외부 CDN에서 다운로드합니다.</p></div><div class="measurebox" id="measureBox"><h3>📐 균열 의심 사진 · 치수선 표시 및 폭 분석</h3>
 <p class="muted">균열과 <b>밀리미터 눈금자</b>를 같은 평면에 놓고 촬영하세요. 눈금자 기준점 두 곳을 누른 다음 균열 양쪽 경계를 누르면 사진의 픽셀을 mm로 환산합니다. <b>측정값은 참고용 추정치</b>이며 실제 계측값이 아닙니다.</p>
 <canvas id="measureCanvas" class="measurecanvas" width="640" height="360" aria-label="사진에서 눈금자 기준점과 균열 경계를 선택"></canvas>
 <p class="measurestep" id="autoPixelResult">AI 자동 캡처 사진에는 의심 위치와 픽셀 폭이 표시됩니다. 실제 mm 표기는 눈금자 보정 후에만 가능합니다.</p><p class="measurestep" id="measureStep">먼저 카메라에서 사진을 촬영하거나 선택해 주세요.</p>
@@ -62,7 +62,7 @@ body.scan-immersive .scanframe{inset:16% 10% 23%}
 const areaGuides={"벽체":"벽면의 균열 방향·길이·위치, 누수·백화, 마감재 들뜸을 확인하세요. 내력벽 여부는 영상만으로 판단할 수 없으며 구조도면 등의 확인이 필요합니다.","기둥·보":"기둥·보의 균열, 콘크리트 박락, 철근 노출, 변형 징후를 관찰하세요. 구조부재 손상이 의심되면 전문가 확인이 필요합니다.","계단실":"계단실 벽체 균열, 계단 디딤판 파손, 미끄럼 위험, 난간의 연속성과 고정 상태를 확인하세요. 계단실 벽이 모두 내력벽인 것은 아닙니다.","난간":"계단·복도·발코니의 난간 존재 여부, 파손, 흔들림, 틈새를 살펴보세요. 법적 설치 기준 충족 여부는 현장 치수와 용도에 따라 별도 검토가 필요합니다.","외벽":"외벽의 균열, 마감재 들뜸·탈락, 누수 흔적을 살펴보세요. 낙하 위험이 의심되면 아래쪽 접근을 피하세요.","옹벽":"옹벽 균열, 배부름·기울어짐, 배수구 막힘, 토사 유실을 확인하세요. 영상만으로 변위를 계측하거나 안전성을 판정할 수 없습니다.","바닥":"바닥의 균열·침하·단차·들뜸 등 이상 징후를 확인하세요. 위험이 의심되면 접근하지 말고 전문가에게 확인받으세요.","천장":"천장의 균열·누수·박락·처짐 등 이상 징후를 확인하세요. 낙하 위험이 의심되면 아래쪽 접근을 피하세요.","기타":"시설물의 위치와 손상 양상을 기록하세요. 보이지 않는 내부 결함은 사진만으로 확인할 수 없습니다."};
 let area='벽체',stream=null,photo=null,records=[],building={};
 const autoLastAt={};let defectClassHits={spall:0,rust:0};const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function go(id){document.body.classList.toggle('scan-immersive',id==='scan');document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.id===id));document.querySelectorAll('.nav button').forEach(e=>e.classList.toggle('on',e.id==='nav-'+(id==='scan'||id==='report'?'form':id)));window.scrollTo(0,0);if(id!=='scan'){stopLive(false);stopCamera()}if(id==='compare')renderCrackHistory()}
-let areaAnnouncementUntil=0;function announceAreaChange(a){areaAnnouncementUntil=Date.now()+4500;const msg=a+(a==='벽체'||a==='바닥'||a==='천장'||a==='외벽'||a==='옹벽'?'를':'을')+' 점검합니다.';if(liveEnabled)voiceSay(msg,'area');const el=$('captionText');if(el)el.textContent=msg;const sub=$('captionSub');if(sub)sub.textContent='점검 부위가 변경되었습니다.';const tag=$('captionArea');if(tag)tag.textContent=a+' · 점검 중';}function exitImmersiveScan(){go('recordsTab');}function renderAreas(){$('areas').innerHTML=Object.keys(areaGuides).map(a=>`<button class="checkbtn ${a===area?'selected':''}" onclick="selectArea('${a}')">${a}</button>`).join('');$('guide').textContent=areaGuides[area];$('areaTag').textContent=area;const sel=$('scanAreaSelect');if(sel)sel.value=area}function selectArea(a){const changed=area!==a;area=a;renderAreas();if(changed)announceAreaChange(a);else guidePrompt()}renderAreas();
+let scanCycleStart=0,scanCycleCrackStart=0,scanCycleDone=false,scanCycleArea='';let areaAnnouncementUntil=0;function announceAreaChange(a){areaAnnouncementUntil=Date.now()+4500;const msg=a+(a==='벽체'||a==='바닥'||a==='천장'||a==='외벽'||a==='옹벽'?'를':'을')+' 점검합니다.';if(liveEnabled)voiceSay(msg,'area');const el=$('captionText');if(el)el.textContent=msg;const sub=$('captionSub');if(sub)sub.textContent='점검 부위가 변경되었습니다.';const tag=$('captionArea');if(tag)tag.textContent=a+' · 점검 중';}function exitImmersiveScan(){go('recordsTab');}function renderAreas(){$('areas').innerHTML=Object.keys(areaGuides).map(a=>`<button class="checkbtn ${a===area?'selected':''}" onclick="selectArea('${a}')">${a}</button>`).join('');$('guide').textContent=areaGuides[area];$('areaTag').textContent=area;const sel=$('scanAreaSelect');if(sel)sel.value=area}function selectArea(a){const changed=area!==a;area=a;renderAreas();if(changed){scanCycleStart=Date.now();scanCycleCrackStart=inspectCrackCount;scanCycleDone=false;scanCycleArea=a;announceAreaChange(a)}else guidePrompt()}renderAreas();
 function startInspection(){if(!$('buildingForm').reportValidity())return;building={name:$('bname').value.trim(),type:$('btype').value,year:$('byear').value,floors:$('bfloors').value,structure:$('bstructure').value,location:$('barea').value,note:$('bnote').value};records=[];Object.keys(autoLastAt).forEach(k=>delete autoLastAt[k]);defectClassHits={spall:0,rust:0};crackCandidate=null;crackStable=0;crackHits=0;aiObservations=[];aiAreaSeen=new Set();photo=null;$('photoPreview').classList.add('hidden');$('photoEmpty').classList.remove('hidden');renderRecords();enableOrientation();$('scanBuilding').textContent=building.name+' · '+building.type+' · 관찰 부위를 선택하고 촬영하세요.';prepareInspection()}
 async function openCamera(){stopCamera();if(!navigator.mediaDevices?.getUserMedia){$('camfallback').innerHTML='<div class="big">🔒</div>카메라를 사용할 수 없습니다.<br>HTTPS 환경 또는 localhost에서 열어보세요.<br>사진 선택 기능은 계속 사용할 수 있습니다.';return}try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});$('video').srcObject=stream;$('video').style.display='block';$('camfallback').classList.add('hidden');$('video').onloadedmetadata=()=>{if(stream&&!liveEnabled)startLive()};$('video').play().catch(()=>{});if($('video').videoWidth)startLive()}catch(e){$('camfallback').innerHTML='<div class="big">📷</div>카메라 연결에 실패했습니다.<br>브라우저 권한을 확인하거나 사진 선택을 이용하세요.';$('camfallback').classList.remove('hidden')}}function stopCamera(){stopLive();if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('video').srcObject=null;$('video').style.display='none';$('camfallback').classList.remove('hidden')}
 function setPhoto(data){photo=data;measureSetImage(data);$('photoPreview').src=data;$('photoPreview').classList.remove('hidden');$('photoEmpty').classList.add('hidden')}function downloadCurrentPhoto(){
@@ -138,7 +138,7 @@ async function submitExpertRequest(){
  function inspectSuccess(type){if(type==='frame')inspectFrameCount++;if(type==='crack')inspectCrackCount++;inspectLastAt=Date.now();inspectUpdate()}
  function liveStatus(s){$('liveStatus').textContent=s}
  function caption(message,sub){if(Date.now()<areaAnnouncementUntil)return;$('captionText').textContent=message;if(sub)$('captionSub').textContent=sub;$('captionArea').textContent=liveEnabled?'AI 화면 분석 중':'분석 대기'}
- function guidePrompt(){const msg='카메라를 점검할 부분에 천천히 비춰주세요.';caption(msg,'AI가 화면을 분석하고 있습니다. 이상 징후가 발견되면 안내합니다.');}
+ function guidePrompt(){caption('점검을 시작합니다 · 약 15초간 한 부위를 비춰주세요.','분석이 완료되면 다음 부위로 이동하라고 안내합니다.');}
  function expertFromRisk(){go('expert');prefillExpert()}
  function appendLive(){}
  // Voice announcements run on their own cadence, independently of fast-changing subtitles.
@@ -162,8 +162,8 @@ async function submitExpertRequest(){
    try{synth.resume();synth.speak(utterance)}catch(e){voiceSpeaking=false}
  }
  function toggleScanVoice(){const c=$('voiceOn');c.checked=!c.checked;const b=$('scanVoiceBtn');if(b)b.textContent=c.checked?'🔊 음성':'🔇 음소거';if(c.checked){voiceLastAt=0;voiceSay(area+' 점검 중입니다. 음성 안내가 켜졌습니다.','area')}else if('speechSynthesis' in window)window.speechSynthesis.cancel()}
- function voiceGuide(){if(!liveEnabled)return;const label=area||'시설물';voiceSay(label+'을 점검하고 있습니다. 표면의 균열이나 손상된 부분이 있는지 천천히 확인해 주세요.','guide')}
- function voiceStart(){voiceStop();voiceLastAt=0;voiceLastType='';voiceSay(area+' 점검을 시작합니다. 표면을 천천히 비춰주세요.','area');voiceGuideTimer=setInterval(voiceGuide,25000)}
+ function voiceGuide(){if(!liveEnabled)return;const label=area||'시설물';voiceSay(label+' 점검 중입니다. 잠시 후 다음 부위로 이동하라는 안내가 나옵니다.','guide')}
+ function voiceStart(){voiceStop();voiceLastAt=0;voiceLastType='';voiceSay(area+' 점검을 시작합니다. 약 15초간 비춘 후 다음 부위로 이동하라는 안내를 드립니다.','area');voiceGuideTimer=setInterval(voiceGuide,25000)}
  function voiceStop(){if(voiceGuideTimer){clearInterval(voiceGuideTimer);voiceGuideTimer=null}voiceSpeaking=false;if('speechSynthesis' in window)window.speechSynthesis.cancel()}
  function speakObservation(msg){
    // AI descriptions may update every few seconds. Speak only urgent defect findings;
@@ -256,7 +256,7 @@ async function submitExpertRequest(){
      let sampledMax=-Infinity,sampledMin=Infinity;
      for(let i=0;i<logits.length;i+=257){sampledMax=Math.max(sampledMax,logits[i]);sampledMin=Math.min(sampledMin,logits[i]);}
      const rawLogits=sampledMax>1.05||sampledMin<-.05;
-     const sensitivity=Number($('crackSensitivity')?.value??1);const threshold=rawLogits?([3.15,2.65,2.1][sensitivity]):([0.96,0.935,0.89][sensitivity]); // sigmoid(2.8) ~= 0.943
+     const sensitivity=Number($('crackSensitivity')?.value??1);const threshold=rawLogits?([2.8,2.15,1.6][sensitivity]):([0.94,0.90,0.83][sensitivity]); // sigmoid(2.8) ~= 0.943
      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
        const i=y*w+x;if(logits[i]<threshold)continue;
        let neighbors=0;
@@ -279,7 +279,7 @@ async function submitExpertRequest(){
        }
        const bw=maxx-minx+1,bh=maxy-miny+1,length=Math.max(bw,bh),thickness=tail/Math.max(length,1);
        // Exclude tiny dots, large patches, and thick/compact shapes; not a guarantee of a crack.
-       if(tail>=([30,20,13][sensitivity])&&tail<=3200&&length>=([40,28,20][sensitivity])&&thickness<=([8,11,13][sensitivity])&&scoreSum/tail>=([.96,.93,.89][sensitivity])){
+       if(tail>=([24,13,8][sensitivity])&&tail<=3200&&length>=([30,20,13][sensitivity])&&thickness<=([9,13,16][sensitivity])&&scoreSum/tail>=([.94,.90,.85][sensitivity])){
          components.push({minx,maxx,miny,maxy,pixels:tail,centerX:(minx+maxx)/2,centerY:(miny+maxy)/2,score:scoreSum/tail});
        }
      }
@@ -289,10 +289,10 @@ async function submitExpertRequest(){
      // Moving the phone invalidates this check; it is NOT object tracking or a confirmed diagnosis.
      const now=Date.now();
      const stable=!!(best&&crackCandidate&&now-crackLastFrameAt<18000&&
-       Math.hypot(best.centerX-crackCandidate.centerX,best.centerY-crackCandidate.centerY)<65);
+       Math.hypot(best.centerX-crackCandidate.centerX,best.centerY-crackCandidate.centerY)<110);
      crackStable=best?(stable?Math.min(5,crackStable+1):1):0;
      crackCandidate=best;crackLastFrameAt=now;
-     const confirmed=!!best&&crackStable>=([3,3,2][sensitivity]);
+     const confirmed=!!best&&crackStable>=([2,2,2][sensitivity]);
      crackHits=confirmed?Math.min(5,crackHits+1):0;
      octx.clearRect(0,0,w,h);
      if(confirmed){
@@ -308,12 +308,12 @@ async function submitExpertRequest(){
        defectMessage('⚠ 반복 확인된 균열 의심 영역 · 빨간 테두리 · 실제 균열인지 현장 확인 필요','warn');
        addAutoFinding('균열 의심','균열 전용 모델에서 반복 탐지(오탐 가능). 픽셀 폭 추정은 캡처 사진 아래에서 확인; mm 측정은 눈금자 보정 필요');
        const msg='같은 화면 위치에서 균열 의심 영역이 반복 탐지되었습니다. 실제 균열인지 가까이서 확인해 주세요.';
-       caption(msg,'AI 의심 탐지 · 구조 안전성 판정 아님');
+       caption(msg,'균열 후보 자동 탐지 · 구조 안전성 판정 아님');
        if(now-lastCrackAt>60000){speakObservation(msg);
          if($('autoDefectCapture').checked){lastCrackAt=now;captureCandidate();showAutoPixelEstimate();$('candidateStatus').textContent='균열 의심 화면 자동 캡처 완료. 사진 아래 픽셀 폭 추정값과 눈금자 보정 안내를 확인하세요.';}
        }
      }else if(best){
-       defectMessage('균열 의심 무늬 확인 중 ('+crackStable+'/'+([3,3,2][sensitivity])+') · 확인 전에는 빨간 표시 및 자동 기록을 하지 않습니다');
+       defectMessage('균열 후보 분석 중 · 후보가 다시 확인되면 사진에 표시합니다.');
      }else{
        defectMessage('현재 화면에서 반복 확인된 균열 의심 영역 없음 · 손상 없음 또는 안전성 양호 판정 아님');
      }
@@ -375,11 +375,11 @@ async function submitExpertRequest(){
    if(score<0.27&&!(sensorArea==='천장'||sensorArea==='바닥')){
     msg='화면을 충분히 구분하지 못했습니다. 점검할 부분을 화면 중앙에 맞춰주세요.';
    }else if(detected==='기타'){
-    msg='카메라를 점검할 표면에 천천히 비춰주세요.';
+    msg='표면을 분석했습니다. 다른 방향도 확인해 주세요.';
    }else{
     aiAreaSeen.add(detected);
     // Don't announce selected area or repeatedly speak inferred category.
-    msg='표면을 천천히 비춰주세요. AI가 손상 의심 부위를 확인하고 있습니다.';
+    msg='AI가 현재 화면을 분석했습니다.';
    }
    // v10 exploratory CLIP comparison: candidate screening, NOT a specialized defect detector.
    if(['벽체','기둥·보','외벽','옹벽','바닥','천장'].includes(detected)&&score>=0.27){
@@ -408,15 +408,29 @@ async function submitExpertRequest(){
       if(crackHits<2)msg='녹이나 부식으로 의심되는 부분이 보입니다. 가까이 비춰 확인해 주세요.';
     }
    }else{defectClassHits.spall=0;defectClassHits.rust=0;}
-   if(crackHits<2)caption(msg,'무료 AI 화면 분류 결과(추정) · 화면은 서버로 전송하지 않음 · 안전등급 판정 불가');
+   if(crackHits<2&&!scanCycleDone)caption(msg,'균열 탐지와 화면 분석을 진행 중입니다.');
    aiObservations.push({area:detected,score:Number(score.toFixed(2)),message:msg,at:new Date().toISOString()});
    if(aiObservations.length>50)aiObservations.shift();
-   liveStatus('무료 AI 화면 분석 작동 중');speakObservation(msg);
+   liveStatus('무료 AI 화면 분석 작동 중');if(/의심되는 부분이 보입니다/.test(msg))speakObservation(msg);
   }catch(e){if(liveEnabled&&run===session){liveStatus('AI 모델 실행 실패');caption('무료 AI 모델을 불러오지 못했습니다.','네트워크 연결·브라우저 메모리를 확인하고 AI 안내 다시 시작을 눌러주세요. '+String(e.message||'').slice(0,130));stopLive(false)}}
   finally{liveBusy=false}
  }
  function updateCrackSensitivity(){const names=['낮음','균형','높음'];$('crackSensitivityLabel').textContent=names[Number($('crackSensitivity').value)]||'균형';crackCandidate=null;crackStable=0;clearDefectOverlay()}
- function startLive(){if(!stream||!$('video').videoWidth){liveStatus('영상 준비 중');return}if(liveEnabled)return;liveEnabled=true;session++;inspectFrameCount=0;inspectCrackCount=0;inspectLastAt=0;inspectUpdate();if(inspectWatch)clearInterval(inspectWatch);inspectWatch=setInterval(inspectUpdate,3000);$('liveStart').disabled=true;$('liveStop').disabled=false;liveStatus('무료 AI 준비 중');guidePrompt();voiceStart();analyzeFrame();let ticks=0;liveTimer=setInterval(()=>{if((ticks++%2)===0)analyzeFrame();if(crackSession)analyzeCrack();else if(!crackFailure)ensureCrackModel()},4500);analyzeCrack()}
+ function scanCycleUpdate(){
+ if(!liveEnabled)return;
+ if(scanCycleArea!==area){scanCycleArea=area;scanCycleStart=Date.now();scanCycleCrackStart=inspectCrackCount;scanCycleDone=false;}
+ if(scanCycleDone)return;
+ const elapsed=Date.now()-scanCycleStart;
+ // A bounded observation window avoids endless instructions. This is NOT proof of no damage.
+ if(elapsed>=15000){
+   scanCycleDone=true;
+   const enough=inspectCrackCount>scanCycleCrackStart;
+   const msg=enough?'현재 부위의 1차 AI 관찰이 끝났습니다. 다음 부위를 비춰주세요.':'현재 부위의 관찰 시간이 지났습니다. AI 균열 분석이 완료되지 않아 결과는 미확인입니다. 다음 부위를 비추거나 다시 점검해 주세요.';
+   caption(msg,enough?'균열이 발견되지 않았더라도 안전 판정은 아닙니다.':'인터넷 연결과 AI 모델 준비 상태를 확인하세요.');
+   voiceSay(enough?'현재 부위의 1차 관찰이 끝났습니다. 다음 부위를 비춰주세요.':'현재 부위 분석이 아직 완료되지 않았습니다. 다시 점검해 주세요.','area');
+ }
+}
+function startLive(){if(!stream||!$('video').videoWidth){liveStatus('영상 준비 중');return}if(liveEnabled)return;liveEnabled=true;session++;inspectFrameCount=0;inspectCrackCount=0;inspectLastAt=0;inspectUpdate();scanCycleStart=Date.now();scanCycleCrackStart=inspectCrackCount;scanCycleDone=false;scanCycleArea=area;if(inspectWatch)clearInterval(inspectWatch);inspectWatch=setInterval(()=>{inspectUpdate();scanCycleUpdate()},1000);$('liveStart').disabled=true;$('liveStop').disabled=false;liveStatus('무료 AI 준비 중');guidePrompt();voiceStart();analyzeFrame();let ticks=0;liveTimer=setInterval(()=>{if((ticks++%2)===0)analyzeFrame();if(crackSession)analyzeCrack();else if(!crackFailure)ensureCrackModel()},2800);analyzeCrack()}
  function stopLive(show=true){voiceStop();clearDefectOverlay();crackCandidate=null;crackStable=0;crackHits=0;liveEnabled=false;session++;if(inspectWatch){clearInterval(inspectWatch);inspectWatch=null}inspectUpdate();if(liveTimer){clearInterval(liveTimer);liveTimer=null}const a=$('liveStart'),b=$('liveStop');if(a)a.disabled=false;if(b)b.disabled=true;if(show&&$('liveStatus')){liveStatus('분석 일시 중지');caption('화면 분석이 일시 중지되었습니다.','다시 시작 버튼을 눌러 재개할 수 있습니다.')}if('speechSynthesis' in window)window.speechSynthesis.cancel()}
  
 // Experimental pixel-pattern trigger: NOT a validated crack detector.
