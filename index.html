@@ -166,7 +166,7 @@ body.scan-immersive #scan .caption-panel{bottom:calc(78px + env(safe-area-inset-
 #scanPreview.select-fullscreen #scanPhotoWrap{bottom:calc(env(safe-area-inset-bottom) + 240px)!important}
 #scanPreview.select-fullscreen #multiRefineButton:not(:disabled){background:#00a78d!important;color:#fff!important;box-shadow:0 0 0 3px #c3fff0,0 5px 15px #0009!important}
 #scanPreview.select-fullscreen #scanTouchCanvas{z-index:4!important}
-</style><script>if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>{if(r.scope.includes("/osan-ai-safety/"))r.unregister()})).catch(()=>{});}</script></head><body><div id="modelReadyGate" role="dialog" aria-modal="true" aria-labelledby="gateTitle"><div class="gate-card"><div class="gate-spin" id="gateSpinner"></div><h2 id="gateTitle">AI 분석 모델 준비 중</h2><p id="gateMessage">카메라와 균열 분석 모델을 연결하고 있습니다. 준비가 완료되면 점검 화면이 자동으로 열립니다.</p><div class="gate-actions" id="gateActions"><button type="button" onclick="retryModelReadyGate()">AI 다시 연결하기</button><button class="secondary" type="button" onclick="leaveModelReadyGate()">돌아가기</button></div><p style="font-size:12px;color:#a8c4dc">처음 접속하거나 네트워크가 느리면 모델 다운로드에 시간이 걸릴 수 있습니다.</p></div></div><div id="scanPreview" role="dialog" aria-modal="true" aria-labelledby="scanPreviewTitle"><div class="scan-preview-card"><h2 id="scanPreviewTitle" style="margin:0">1차 정밀점검 · 균열 후보 선택 <small id="buildVersion" style="font-size:12px;color:#0b65d8;font-weight:800">v61 · 선 선택 확인 · 확대 재분석</small></h2><div id="scanPhotoWrap"><img id="scanPreviewPhoto" alt="AI가 찾은 빨간색 균열 의심 부분을 터치해 선택하세요"><canvas id="scanTouchCanvas" aria-label="균열 의심 영역 선택" onclick="selectCrackAtEvent(event)"></canvas></div><div id="multiSelectActions"><button type="button" id="multiRefineButton" disabled onclick="refineChosenCracks()">선택한 균열 0개 · 2차 정밀점검</button><button type="button" onclick="clearChosenCracks()">선택 해제</button></div><div id="scanSelectionStatus" role="status">빨간 선을 터치해 선택하세요. 선택된 선은 청록색으로 강조되고 번호가 표시됩니다. 여러 개 선택할 수 있어요.</div><div id="refineProgress" role="status" aria-live="polite"><span id="refineProgressLabel">정밀 분석 준비 중</span><div id="refineBar"><div id="refineBarFill"></div></div></div><section id="secondScanResults" aria-live="polite"><h3>🔎 2차 정밀점검 결과</h3><img id="secondScanResultImage" alt="2차 정밀점검으로 빨간색 균열 후보와 가정 폭을 표시한 사진"><p id="secondScanResultSummary"></p><p id="secondScanResultCaution">선택 영역을 확대하여 AI로 다시 분석한 참고 결과입니다. AI가 재검출하지 못한 선은 1차 선택 표시를 유지하며 재확인이 필요합니다. 균열 확정이나 안전성 판정이 아니며, 폭은 촬영거리 20cm 등을 가정한 값으로 실측이 아닙니다.</p></section><div id="scanWidthEstimate" style="display:none;background:#eef5ff;border:1px solid #c7dbfb;border-radius:12px;padding:12px;color:#143c68;font-weight:750;font-size:14px;line-height:1.55"></div><p id="scanPreviewDesc" style="margin:0;font-size:13px;line-height:1.6">AI 분석 결과는 현장 안전 판정이 아닙니다.</p><div class="scan-preview-actions"><button class="save-scan" type="button" id="scanSaveContinue" disabled onclick="saveAndContinueScanPreview()">✓ 선택한 균열 저장하고 계속하기</button><button class="save-scan" type="button" id="scanSaveFinish" disabled onclick="saveAndFinishScanPreview()">✓ 선택한 균열 저장하고 결과 보기</button><button class="retry-scan" type="button" onclick="retryScanPreview()">↻ 균열이 아니거나 불확실해요 · 다시 점검</button></div><p style="margin:0;font-size:12px;color:#64748b">저장은 시민의 관찰 의견이며 균열 확정 판정이 아닙니다. 다시 점검은 균열이 아니라는 확정 판정이 아닙니다. 피드백은 이 기기에만 저장되며 AI 모델을 자동 학습시키지 않습니다. <button type="button" onclick="exportLocalScanFeedback()" style="border:0;background:transparent;color:#1656ac;text-decoration:underline;font-size:12px">피드백 내보내기</button></p></div></div><div id="aiPrepare" class="ai-prepare" role="dialog" aria-modal="true" aria-labelledby="prepareTitle" aria-live="polite"><div class="prepare-card"><div class="prepare-mark">✳</div><h2 class="prepare-title" id="prepareTitle">AI 안전점검이 곧 시작됩니다</h2><div class="prepare-spinner" id="prepareSpinner"></div><p class="prepare-detail" id="prepareDetail">AI 분석 기능을 준비하고 있습니다.</p><p class="prepare-small">카메라는 먼저 실행하고 AI 모델은 별도로 준비합니다.</p><div class="prepare-error" id="prepareError"><div id="prepareErrorText"></div><button type="button" onclick="prepareInspection()">다시 시도</button><button type="button" onclick="cancelPreparation()">돌아가기</button></div></div></div><div class="app"><header class="top"><div class="brand"><span class="logo">✳</span>오산 <span style="color:#126ce9">AI 안전점검</span></div><small>시민과 함께하는 시설물 위험징후 기록 서비스 · 시제품</small></header><nav class="nav" aria-label="서비스 메뉴"><button id="nav-home" class="on" onclick="go('home')">⌂ 홈</button><button id="nav-form" onclick="go('form')">📷 AI 안전점검</button><button id="nav-records" onclick="go('recordsTab')">📝 관찰 사항 기록</button><button id="nav-compare" onclick="go('compare')">📏 균열 변화 비교</button><button id="nav-expert" onclick="go('expert')">👷 전문가에게 문의</button></nav><main class="main">
+</style><script>if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>{if(r.scope.includes("/osan-ai-safety/"))r.unregister()})).catch(()=>{});}</script></head><body><div id="modelReadyGate" role="dialog" aria-modal="true" aria-labelledby="gateTitle"><div class="gate-card"><div class="gate-spin" id="gateSpinner"></div><h2 id="gateTitle">AI 분석 모델 준비 중</h2><p id="gateMessage">카메라와 균열 분석 모델을 연결하고 있습니다. 준비가 완료되면 점검 화면이 자동으로 열립니다.</p><div class="gate-actions" id="gateActions"><button type="button" onclick="retryModelReadyGate()">AI 다시 연결하기</button><button class="secondary" type="button" onclick="leaveModelReadyGate()">돌아가기</button></div><p style="font-size:12px;color:#a8c4dc">처음 접속하거나 네트워크가 느리면 모델 다운로드에 시간이 걸릴 수 있습니다.</p></div></div><div id="scanPreview" role="dialog" aria-modal="true" aria-labelledby="scanPreviewTitle"><div class="scan-preview-card"><h2 id="scanPreviewTitle" style="margin:0">1차 정밀분석 · 균열 후보 선택 <small id="buildVersion" style="font-size:12px;color:#0b65d8;font-weight:800">v63 · 복수 선택 유지 · 끊김 검토</small></h2><div id="scanPhotoWrap"><img id="scanPreviewPhoto" alt="AI가 찾은 빨간색 균열 의심 부분을 터치해 선택하세요"><canvas id="scanTouchCanvas" aria-label="균열 의심 영역 선택" onclick="selectCrackAtEvent(event)"></canvas></div><div id="multiSelectActions"><button type="button" id="multiRefineButton" disabled onclick="refineChosenCracks()">선택한 균열 0개 · 2차 정밀분석</button><button type="button" onclick="clearChosenCracks()">선택 해제</button></div><div id="scanSelectionStatus" role="status">빨간 선을 터치해 선택하세요. 선택된 선은 청록색으로 강조되고 번호가 표시됩니다. 여러 개 선택할 수 있어요.</div><div id="refineProgress" role="status" aria-live="polite"><span id="refineProgressLabel">정밀 분석 준비 중</span><div id="refineBar"><div id="refineBarFill"></div></div></div><section id="secondScanResults" aria-live="polite"><h3>🔎 2차 정밀분석 결과</h3><img id="secondScanResultImage" alt="2차 정밀분석으로 빨간색 균열 후보와 가정 폭을 표시한 사진"><p id="secondScanResultSummary"></p><p id="secondScanResultCaution">선택 영역을 확대하여 AI로 다시 분석한 참고 결과입니다. AI가 재검출하지 못한 선은 1차 선택 표시를 유지하며 재확인이 필요합니다. 균열 확정이나 안전성 판정이 아니며, 폭은 촬영거리 20cm 등을 가정한 값으로 실측이 아닙니다.</p></section><div id="scanWidthEstimate" style="display:none;background:#eef5ff;border:1px solid #c7dbfb;border-radius:12px;padding:12px;color:#143c68;font-weight:750;font-size:14px;line-height:1.55"></div><p id="scanPreviewDesc" style="margin:0;font-size:13px;line-height:1.6">AI 분석 결과는 현장 안전 판정이 아닙니다.</p><div class="scan-preview-actions"><button class="save-scan" type="button" id="scanSaveContinue" disabled onclick="saveAndContinueScanPreview()">✓ 선택한 균열 저장하고 계속하기</button><button class="save-scan" type="button" id="scanSaveFinish" disabled onclick="saveAndFinishScanPreview()">✓ 선택한 균열 저장하고 결과 보기</button><button class="retry-scan" type="button" onclick="retryScanPreview()">↻ 균열이 아니거나 불확실해요 · 다시 점검</button></div><p style="margin:0;font-size:12px;color:#64748b">저장은 시민의 관찰 의견이며 균열 확정 판정이 아닙니다. 다시 점검은 균열이 아니라는 확정 판정이 아닙니다. 피드백은 이 기기에만 저장되며 AI 모델을 자동 학습시키지 않습니다. <button type="button" onclick="exportLocalScanFeedback()" style="border:0;background:transparent;color:#1656ac;text-decoration:underline;font-size:12px">피드백 내보내기</button></p></div></div><div id="aiPrepare" class="ai-prepare" role="dialog" aria-modal="true" aria-labelledby="prepareTitle" aria-live="polite"><div class="prepare-card"><div class="prepare-mark">✳</div><h2 class="prepare-title" id="prepareTitle">AI 안전점검이 곧 시작됩니다</h2><div class="prepare-spinner" id="prepareSpinner"></div><p class="prepare-detail" id="prepareDetail">AI 분석 기능을 준비하고 있습니다.</p><p class="prepare-small">카메라는 먼저 실행하고 AI 모델은 별도로 준비합니다.</p><div class="prepare-error" id="prepareError"><div id="prepareErrorText"></div><button type="button" onclick="prepareInspection()">다시 시도</button><button type="button" onclick="cancelPreparation()">돌아가기</button></div></div></div><div class="app"><header class="top"><div class="brand"><span class="logo">✳</span>오산 <span style="color:#126ce9">AI 안전점검</span></div><small>시민과 함께하는 시설물 위험징후 기록 서비스 · 시제품</small></header><nav class="nav" aria-label="서비스 메뉴"><button id="nav-home" class="on" onclick="go('home')">⌂ 홈</button><button id="nav-form" onclick="go('form')">📷 AI 안전점검</button><button id="nav-records" onclick="go('recordsTab')">📝 관찰 사항 기록</button><button id="nav-compare" onclick="go('compare')">📏 균열 변화 비교</button><button id="nav-expert" onclick="go('expert')">👷 전문가에게 문의</button></nav><main class="main">
 <section id="home" class="screen active"><div class="hero"><div><span class="pill">SMART SAFETY · OSAN</span><h1>우리 건물의 안전,<br>스마트폰으로 살펴보세요.</h1><p>카메라로 건물 곳곳을 확인하고, 부위별 점검 안내를 받으며 위험 징후를 직접 기록하세요. 과거 기록과 비교해 변화도 살펴볼 수 있습니다.</p><button class="btn white" onclick="go('form')">안전점검 시작하기 →</button></div><div class="hero-art">🏢<span style="font-size:60px;margin-left:-50px;margin-top:100px">🔎</span></div></div><div style="margin-top:14px"><button class="btn outline" onclick="go('expert')">👷 전문가에게 문의하기 →</button></div><div class="features"><div class="tile"><div class="ico">📷</div><b>카메라 점검</b><p>시설물 부위를 비추고 촬영하여 손상 징후를 기록합니다.</p></div><div class="tile"><div class="ico">🧱</div><b>부위별 점검 가이드</b><p>벽체·기둥·계단·난간·옹벽 등 부위별 확인사항을 안내합니다.</p></div><div class="tile"><div class="ico">📋</div><b>점검 결과 저장</b><p>사진과 관찰 내용을 저장하고 결과를 내려받습니다.</p></div></div><p class="muted" style="margin:20px 4px">※ AI가 균열·박락·부식 등 손상 의심 징후를 살펴보는 개발 시제품입니다. 손상을 놓치거나 잘못 표시할 수 있으므로 직접 확인이 필요합니다. 법정 안전점검·정밀안전진단 또는 구조안전 판정을 대체하지 않습니다.</p></section>
 <section id="form" class="screen"><div class="sectionhead"><div><h2>건물 기본정보 입력</h2><p>건물 정보를 입력하면 부위별 확인사항을 안내합니다.</p></div><span class="steps">01 건물정보 → 02 카메라 점검 → 03 결과</span></div><div class="panel"><form id="buildingForm" class="formgrid"><div><label for="bname">건물명 *</label><input id="bname" required placeholder="예: 우리아파트 101동" maxlength="70"></div><div><label for="btype">건물 용도 *</label><select id="btype" required><option value="">선택해주세요</option><option>공동주택</option><option>단독주택</option><option>근린생활시설</option><option>업무시설</option><option>교육시설</option><option>기타</option></select></div><div><label for="byear">준공연도 (선택)</label><input id="byear" type="number" min="1900" max="2100" placeholder="예: 2008"></div><div><label for="bfloors">지상 층수 (선택)</label><input id="bfloors" type="number" min="1" max="200" placeholder="예: 15"></div><div><label for="bstructure">구조형식 (아는 경우만)</label><select id="bstructure"><option>모름</option><option>철근콘크리트조</option><option>철골조</option><option>조적조</option><option>목조</option><option>기타</option></select></div><div><label for="barea">점검 위치 (선택)</label><input id="barea" placeholder="예: 1층 계단실, 외벽 동측"></div><div class="full"><label for="bnote">특이사항 (선택)</label><textarea id="bnote" rows="2" placeholder="예: 최근 벽면 균열이 눈에 띄기 시작함"></textarea></div></form><div class="note" style="margin-top:18px">건물명과 입력 정보는 이 기기의 브라우저에만 보관됩니다. 주소나 거주자 정보 등 불필요한 개인정보는 입력하지 마세요. 구조형식을 모르면 '모름'으로 두어도 됩니다.</div><div class="actions"><button class="btn outline" onclick="go('home')">이전</button><button class="btn" onclick="startInspection()">카메라 점검 시작 →</button></div></div></section>
 <section id="scan" class="screen"><div class="sectionhead"><div><h2>카메라 안전점검</h2><p id="scanBuilding">시설물을 천천히 확인하고 관찰한 사항을 기록하세요.</p></div><span class="steps">02 카메라 점검</span></div><div class="scanlayout"><div><div class="camera" id="cameraBox"><video id="video" autoplay playsinline muted></video><div class="camfallback" id="camfallback"><div class="big">📷</div><b>카메라 연결 대기</b><p style="font-size:13px;line-height:1.8">카메라 접근을 허용하면 영상이 표시됩니다.<br>PC에서는 사진 파일을 불러올 수도 있습니다.</p></div><div class="scanframe"></div><div class="scan-countdown" id="scanCountdown" aria-hidden="true"><div class="count-num" id="scanCountdownNum">5</div><div class="count-label" id="scanCountdownLabel">AI 관찰 중</div><div class="count-track"><div class="count-progress" id="scanCountdownProgress"></div></div></div><canvas id="defectOverlay" class="defect-overlay" aria-label="실험적 균열 탐지 영역 표시"></canvas><canvas id="edgeOverlay" class="defect-overlay" aria-label="선형 후보 보조 표시" style="display:none!important;visibility:hidden!important"></canvas><div class="camtop"><span class="camtag">● 현장 관찰 모드</span><span class="ai-mini" id="inspectMini" role="status" aria-live="polite"><span class="inspect-led" id="inspectLed"></span><span id="inspectHeadline">AI 대기</span></span><span class="camtag" id="areaTag">벽체</span></div><select id="scanAreaSelect" class="hidden" aria-label="점검 부위 직접 선택" onchange="selectArea(this.value)"><option>벽체</option><option>바닥</option><option>천장</option><option>기둥·보</option><option>계단실</option><option>난간</option><option>외벽</option><option>옹벽</option><option>기타</option></select><div class="scan-float-controls"><button id="scanVoiceBtn" onclick="toggleScanVoice()" aria-label="음성 안내 켜기 또는 끄기">음성</button><button class="scan-retry" onclick="restartScanCycle()">재점검</button><button onclick="capture()">촬영</button><button class="scan-exit" onclick="exitImmersiveScan()">점검 종료</button></div><div class="camfoot"><button onclick="openCamera()">📹 카메라 켜기</button><button onclick="capture()">📸 촬영</button><button onclick="document.getElementById('fileInput').click()">🖼 사진 선택</button><input id="fileInput" class="hidden" type="file" accept="image/*" capture="environment" onchange="loadPhoto(event)"></div></div><div class="caption-panel" id="captionPanel" role="status" aria-live="polite"><div class="caption-kicker"><span>✦ 현장 점검 안내</span><span id="captionArea">벽체 · 대기</span></div><div class="caption-text" id="captionText">현재 점검할 벽체를 비춰주세요.</div><div class="caption-sub" id="captionSub">안내 모드: 선택한 점검 부위의 확인사항을 자막으로 안내합니다. AI가 손상 의심 징후를 탐색하지만 놓치거나 잘못 표시할 수 있습니다.</div></div><div class="panel" style="margin:10px 0"><div class="livehead"><b>점검 안내</b><span id="liveStatus" class="livebadge">카메라 대기</span></div><p class="hint">카메라 화면은 외부 서버에 전송하지 않습니다. 부위를 선택하면 점검 항목이 자막으로 표시되며, 발견한 이상은 관찰 사항 기록 탭에 직접 기록하세요.</p><div class="liveactions"><button class="btn" id="liveStart" onclick="startLive()">▶ 안내 다시 시작</button><button class="btn outline" id="liveStop" onclick="stopLive()" disabled>■ 안내 중지</button></div><label style="margin-top:12px"><input id="voiceOn" type="checkbox" checked style="width:auto;margin-right:6px">음성 안내</label><div id="liveFeed" class="livefeed" aria-live="polite" style="display:none"></div></div><span id="candidateStatus" class="hidden" aria-hidden="true"></span><div class="sensor-panel"><b>📐 휴대폰 방향 센서</b> · <span id="orientationStatus">센서 대기</span><p class="hint">GPS가 아닌 기울기 센서로 촬영 방향을 추정합니다. 카메라 종류·기기 방향에 따라 오차가 있으므로 실제 부위와 대조하세요.</p><label><input type="checkbox" id="autoArea" checked style="width:auto"> 방향 센서로 천장·벽체·바닥 구분 (추정)</label></div>
@@ -950,7 +950,7 @@ function scanPreviewCapture(includeOverlay=false){
 // This is NOT validated crack measurement or structural safety assessment.
 async function refineScanPreview(imageUrl,job){
  if(!crackSession||!imageUrl)return false;
- scanPreviewRefining=true;$('refineProgress').classList.add('show');$('refineProgressLabel').textContent='1차 정밀점검 준비 중';$('refineBarFill').style.width='0%';
+ scanPreviewRefining=true;$('refineProgress').classList.add('show');$('refineProgressLabel').textContent='1차 정밀분석 준비 중';$('refineBarFill').style.width='0%';
  const im=new Image();im.src=imageUrl;await im.decode();
  if(job!==scanPreviewJob||!scanPreviewOpen)return false;
  const base=document.createElement('canvas');base.width=im.naturalWidth;base.height=im.naturalHeight;
@@ -963,7 +963,7 @@ async function refineScanPreview(imageUrl,job){
  let found=0, widths=[];
  for(let ty=0;ty<tiles;ty++)for(let tx=0;tx<tiles;tx++){
   if(job!==scanPreviewJob||!scanPreviewOpen)return false;
-  const region=ty*2+tx+1;$('refineProgressLabel').textContent='1차 정밀점검 중 · '+region+'/4 구역';$('refineBarFill').style.width=((region-1)*25)+'%';
+  const region=ty*2+tx+1;$('refineProgressLabel').textContent='1차 정밀분석 중 · '+region+'/4 구역';$('refineBarFill').style.width=((region-1)*25)+'%';
   await new Promise(resolve=>setTimeout(resolve,0));
   const sw=base.width*span,sh=base.height*span;
   const sx=tx*(base.width-sw),sy=ty*(base.height-sh);
@@ -1052,15 +1052,15 @@ async function refineScanPreview(imageUrl,job){
  $('scanPreviewPhoto').src=scanPreviewImage;
  updateChosenCracks();
  $('scanWidthEstimate').style.display='none';
- $('scanSelectionStatus').textContent=found?'① 사진의 빨간 선 터치 → ② 청록색 강조·번호 확인 → ③ 여러 개 선택 후 아래 2차 정밀점검 버튼 누르기.':'탐지된 균열 후보가 없습니다. 다시 점검해 주세요.';
- scanPreviewRefining=false;$('refineProgressLabel').textContent='1차 정밀점검 완료';$('refineBarFill').style.width='100%';
- $('scanPreviewDesc').textContent=found?'1차 정밀점검 완료. 빨간색 의심 영역을 직접 터치해 확인하면 해당 위치를 확대 재분석합니다. 콘센트·전선 등 오탐은 여전히 가능합니다.':'뚜렷한 균열 후보가 없습니다. 균열이 없다는 뜻은 아니며 재점검을 권장합니다.';
+ $('scanSelectionStatus').textContent=found?'① 사진의 빨간 선 터치 → ② 청록색 강조·번호 확인 → ③ 여러 개 선택 후 아래 2차 정밀분석 버튼 누르기.':'탐지된 균열 후보가 없습니다. 다시 점검해 주세요.';
+ scanPreviewRefining=false;$('refineProgressLabel').textContent='1차 정밀분석 완료';$('refineBarFill').style.width='100%';
+ $('scanPreviewDesc').textContent=found?'1차 정밀분석 완료. 빨간색 의심 영역을 직접 터치해 확인하면 해당 위치를 확대 재분석합니다. 콘센트·전선 등 오탐은 여전히 가능합니다.':'뚜렷한 균열 후보가 없습니다. 균열이 없다는 뜻은 아니며 재점검을 권장합니다.';
  return true;
 }
 function showScanPreview(analyzed){
  voiceStop();disableLineTest();
  if(scanPreviewOpen)return;
- $('secondScanResults').classList.remove('show');$('secondScanResultImage').removeAttribute('src');chosenCracks=[];secondPassDetails=[];scanPreviewImage=scanPreviewCapture(false);scanPreviewOpen=true;scanConfirmed=false;scanOriginalPhoto=null;scanCandidateCanvas=null;scanSelectedPhoto=null;scanSelectedMask=null;scanSelectedPoint=null;setScanSaveEnabled(false);$('scanSelectionStatus').textContent='1차 정밀점검 중입니다. 완료 후 빨간색 후보를 터치하세요.';$('refineProgress').classList.remove('show');
+ $('secondScanResults').classList.remove('show');$('secondScanResultImage').removeAttribute('src');chosenCracks=[];secondPassDetails=[];scanPreviewImage=scanPreviewCapture(false);scanPreviewOpen=true;scanConfirmed=false;scanOriginalPhoto=null;scanCandidateCanvas=null;scanSelectedPhoto=null;scanSelectedMask=null;scanSelectedPoint=null;setScanSaveEnabled(false);$('scanSelectionStatus').textContent='1차 정밀분석 중입니다. 완료 후 빨간색 후보를 터치하세요.';$('refineProgress').classList.remove('show');
  const job=++scanPreviewJob;
  $('scanPreviewPhoto').src=scanPreviewImage||'';
  scanEstimatedPx=null;scanEstimatedMm=null;$('scanWidthEstimate').style.display='none';
@@ -1076,16 +1076,21 @@ function showScanPreview(analyzed){
 // v51: tap-confirmed targeted second-pass segmentation (browser only).
 function setScanSaveEnabled(ok){for(const id of ['scanSaveContinue','scanSaveFinish']){const b=$(id);if(b)b.disabled=!ok;}}
 function updateChosenCracks(){
- const b=$('multiRefineButton');if(b){b.disabled=!chosenCracks.length||scanPreviewRefining;b.textContent=chosenCracks.length?'✓ '+chosenCracks.length+'개 선택 완료 · 2차 정밀점검 시작':'빨간 선을 먼저 선택하세요';}
+ const b=$('multiRefineButton');if(b){b.disabled=!chosenCracks.length||scanPreviewRefining;b.textContent=chosenCracks.length?'✓ '+chosenCracks.length+'개 선택 완료 · 2차 정밀분석 시작':'빨간 선을 먼저 선택하세요';}
  const cv=$('scanTouchCanvas');if(!cv||!scanCandidateCanvas)return;
  cv.width=scanCandidateCanvas.width;cv.height=scanCandidateCanvas.height;
  const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);
  const maskCtx=scanCandidateCanvas.getContext('2d',{willReadFrequently:true});
  const rgba=maskCtx.getImageData(0,0,cv.width,cv.height).data,w=cv.width,h=cv.height;
+ // Combine every chosen candidate into one pixel layer. Each putImageData previously
+ // replaced the whole canvas, erasing cyan lines selected earlier.
+ const selectionLayer=c.createImageData(w,h);
+ chosenCracks.forEach(a=>{for(const p of (a.component||[])){
+  const j=p*4;selectionLayer.data[j]=0;selectionLayer.data[j+1]=245;
+  selectionLayer.data[j+2]=224;selectionLayer.data[j+3]=255;
+ }});
+ c.putImageData(selectionLayer,0,0);
  chosenCracks.forEach((a,i)=>{
-  const component=a.component||[];
-  // The whole selected red line is highlighted, not just the tap point.
-  if(component.length){const layer=c.createImageData(w,h);for(const p of component){let j=p*4;layer.data[j]=0;layer.data[j+1]=245;layer.data[j+2]=224;layer.data[j+3]=255;}c.putImageData(layer,0,0);}
   const x=a.point.x,y=a.point.y,r=Math.max(17,Math.round(w*.027));
   c.beginPath();c.arc(x,y,r+4,0,Math.PI*2);c.fillStyle='#fff';c.fill();
   c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fillStyle='#087b72';c.fill();
@@ -1110,7 +1115,7 @@ async function selectCrackAtEvent(event){
  for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){if(!ox&&!oy)continue;const nx=xx+ox,ny=yy+oy;if(nx<0||ny<0||nx>=w||ny>=h)continue;const q=ny*w+nx;if(!seen[q]&&rgba[q*4+3]>100){seen[q]=1;queue[tail++]=q;}}}
  const prior=chosenCracks.findIndex(a=>a.key===minIndex||seen[a.point.y*w+a.point.x]);
  if(prior>=0)chosenCracks.splice(prior,1);else chosenCracks.push({key:minIndex,point:{x:best%w,y:Math.floor(best/w)},component:Array.from(queue.subarray(0,tail))});
- updateChosenCracks();$('scanSelectionStatus').textContent='✓ '+chosenCracks.length+'개 선택 완료! 선택한 선이 청록색으로 강조됐습니다. 다른 빨간 선을 추가로 누르거나 2차 정밀점검을 시작하세요.';
+ updateChosenCracks();$('scanSelectionStatus').textContent='✓ '+chosenCracks.length+'개 선택 완료! 선택한 선이 청록색으로 강조됐습니다. 다른 빨간 선을 추가로 누르거나 2차 정밀분석을 시작하세요.';
 }
 async function refineChosenCracks(){
  if(!chosenCracks.length||scanPreviewRefining||!scanOriginalPhoto||!crackSession)return;
@@ -1142,9 +1147,9 @@ async function refineChosenCracks(){
  c.font='bold '+Math.max(13,Math.round(output.width/48))+'px sans-serif';c.fillStyle='rgba(7,28,48,.9)';c.fillRect(0,output.height-35,output.width,35);c.fillStyle='white';c.fillText('AI 가정 추정 · 실측 아님',12,output.height-12);
  scanSelectedPhoto=output.toDataURL('image/jpeg',.9);scanPreviewImage=scanSelectedPhoto;
  $('scanPreviewPhoto').src=scanSelectedPhoto;$('secondScanResultImage').src=scanSelectedPhoto;
- $('secondScanResultSummary').textContent='선택한 '+chosenCracks.length+'개 중 '+results.length+'개 선형 후보 표시. '+results.map((r,i)=>(i+1)+'번: '+(r.fallback?'확대 AI 재검출 불확실 · 1차 선택선 유지 · ':'확대 AI 재검출 · ')+(r.mm!==null?'폭 가정 약 '+r.mm.toFixed(2)+' mm':'폭 추정 불가')+' · 영상상 길이 약 '+r.length+' px').join(' / ')+'. 선택된 선을 중심으로 재검토한 참고 결과이며 실측이 아닙니다.';
- $('scanSelectionStatus').textContent='2차 정밀점검 완료 · '+results.length+'개 선택선 표시. 아래 사진과 가정 추정값을 확인하세요.';
- $('scanPreviewDesc').textContent='선택한 위치를 확대하여 AI로 다시 분석했습니다. 재검출이 불확실한 선은 1차 선택 표시를 유지했으며, 선의 시작·끝·끊김은 현장에서 확인해야 합니다.';
+ $('secondScanResultSummary').textContent='선택한 '+chosenCracks.length+'개 중 '+results.length+'개 선형 후보 표시. '+results.map((r,i)=>(i+1)+'번: '+(r.fallback?'확대 AI 재검출 불확실 · 1차 선택선 유지 · ':'확대 AI 재검출 · ')+(r.mm!==null?'폭 가정 약 '+r.mm.toFixed(2)+' mm':'폭 추정 불가')+' · 영상상 길이 약 '+r.length+' px'+(r.bridges?' · 원본 사진 근거로 연결 추정 '+r.bridges+'곳':'')).join(' / ')+'. 선택된 선을 중심으로 재검토한 참고 결과이며 실측이 아닙니다.';
+ $('scanSelectionStatus').textContent='2차 정밀분석 완료 · '+results.length+'개 선택선 표시. 아래 사진과 가정 추정값을 확인하세요.';
+ $('scanPreviewDesc').textContent='선택한 위치를 확대하여 AI로 다시 분석하고 끊긴 구간의 원본 사진 명암과 AI 예측값을 함께 확인해 연결 근거가 있는 구간만 연결 검토했습니다. 주황색 구간은 추정 연결이며 실제 검출된 빨간색 구간과 다릅니다. 서로 다른 균열을 잘못 이을 수 있으므로 시작·끝·연결 여부는 현장에서 확인해야 합니다.';
  $('secondScanResults').classList.add('show');$('scanPreview').classList.remove('select-fullscreen');
  $('refineProgressLabel').textContent='2차 정밀분석 완료 · '+chosenCracks.length+'/'+chosenCracks.length;
  $('refineBarFill').style.width='100%';scanConfirmed=true;setScanSaveEnabled(true);requestAnimationFrame(syncScanTouchLayer);
@@ -1164,6 +1169,72 @@ function firstPassSelectedCrack(selection){
  const length=Math.max(1,maxx-minx+1,maxy-miny+1),thickness=component.length/length;
  const est=assumedMmEstimate(thickness);
  return {point:selection.point,sx:0,sy:0,cropW:w,cropH:h,maskCanvas,length,pixels:component.length,pixelWidth:thickness,mm:est?est.mm:null,fallback:true};
+}
+function bridgeShortCrackGaps(mask,logits,rgba,size,threshold){
+ // v63: A gap is bridged only if the ORIGINAL crop contains a continuous
+ // dark, line-like trace AND the model retains weak evidence in that gap.
+ // Endpoint proximity and direction alone are never sufficient.
+ const dirs=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+ const bridgePixels=new Uint8Array(size*size);
+ const luminance=(x,y)=>{const i=(y*size+x)*4;return .2126*rgba[i]+.7152*rgba[i+1]+.0722*rgba[i+2]};
+ let connected=0;
+ for(let pass=0;pass<2;pass++){
+  const ends=[];
+  for(let y=6;y<size-6;y++)for(let x=6;x<size-6;x++){
+   const p=y*size+x;if(!mask[p])continue;
+   let count=0,nx=0,ny=0;
+   for(const [dx,dy] of dirs)if(mask[p+dy*size+dx]){count++;nx+=dx;ny+=dy;}
+   if(count!==1)continue; // Only unambiguous endpoints, not forks or thick edges.
+   const norm=Math.hypot(nx,ny);if(norm<.5)continue;
+   ends.push({x,y,dx:-nx/norm,dy:-ny/norm});
+  }
+  if(ends.length>1000)break;
+  const used=new Set();let added=0;
+  for(let i=0;i<ends.length;i++){
+   if(used.has(i))continue;
+   const a=ends[i];let best=-1,bestScore=-Infinity,bestPath=null;
+   for(let j=i+1;j<ends.length;j++){
+    if(used.has(j))continue;
+    const b=ends[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
+    if(d<3||d>12)continue;
+    const vx=dx/d,vy=dy/d;
+    if(a.dx*vx+a.dy*vy<.82||b.dx*vx+b.dy*vy>-.82)continue;
+    const steps=Math.ceil(d*2),path=[];let modelHits=0,darkHits=0,eligible=0,consecutiveMiss=0,longestMiss=0,contrastSum=0;
+    for(let k=2;k<steps-1;k++){
+     const t=k/steps,x=Math.round(a.x+dx*t),y=Math.round(a.y+dy*t),p=y*size+x;
+     if(x<5||y<5||x>=size-5||y>=size-5)continue;
+     if(path.length&&path[path.length-1]===p)continue;
+     if(mask[p])continue;
+     const cx=x,cy=y,px=-vy,py=vx;
+     // Compare center of suspected trace to BOTH perpendicular flanks
+     // in the original, unannotated photograph (not a red overlay).
+     const center=luminance(cx,cy);
+     const left=luminance(Math.round(cx+px*3),Math.round(cy+py*3));
+     const right=luminance(Math.round(cx-px*3),Math.round(cy-py*3));
+     const contrast=(left+right)/2-center;
+     const model=logits[p]>=threshold*.65;
+     const dark=contrast>=7&&left-center>=3&&right-center>=3;
+     eligible++;contrastSum+=contrast;
+     if(model)modelHits++;
+     if(dark)darkHits++;
+     if(model&&dark){consecutiveMiss=0;}else{consecutiveMiss++;longestMiss=Math.max(longestMiss,consecutiveMiss);}
+     path.push(p);
+    }
+    if(eligible<2||path.length<2)continue;
+    // Require independent image evidence and model evidence across the gap.
+    // Never synthesize a line across a visually blank interval.
+    if(modelHits/eligible<.65||darkHits/eligible<.70||longestMiss>2||contrastSum/eligible<9)continue;
+    const score=(modelHits+darkHits)/eligible-d*.025;
+    if(score>bestScore){bestScore=score;best=j;bestPath=path;}
+   }
+   if(best<0)continue;
+   for(const p of bestPath){mask[p]=1;bridgePixels[p]=1;}
+   used.add(i);used.add(best);connected++;added++;
+   if(connected>=16)break;
+  }
+  if(!added||connected>=16)break;
+ }
+ return {count:connected,bridgePixels};
 }
 async function refineSelectedCrack(point,job){
  const source=new Image();source.src=scanOriginalPhoto;await source.decode();
@@ -1185,6 +1256,10 @@ async function refineSelectedCrack(point,job){
  const sens=Number($('crackSensitivity')?.value??1),raw=max>1.05||min<-.05,threshold=raw?[2.35,1.65,1.05][sens]:[.91,.84,.75][sens];
  const mask=new Uint8Array(side*side);
  for(let y=1;y<side-1;y++)for(let x=1;x<side-1;x++){const p=y*side+x;if(logits[p]<threshold)continue;let near=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if((dx||dy)&&logits[p+dy*side+dx]>=threshold)near++;if(near>=1)mask[p]=1;}
+ // Conservative second-pass continuity review: connect very short interruptions
+ // only when endpoints face each other and the model gives some support in the gap.
+ // This is an image-processing heuristic, NOT a new model or proof of one crack.
+ const bridgeInfo=bridgeShortCrackGaps(mask,logits,rgba,side,threshold);
  const px=Math.round((point.x-sx)*side/cropW),py=Math.round((point.y-sy)*side/cropH);
  let seed=-1,best=Infinity;
  for(let dy=-35;dy<=35;dy++)for(let dx=-35;dx<=35;dx++){let xx=px+dx,yy=py+dy;if(xx<1||yy<1||xx>=side-1||yy>=side-1)continue;let p=yy*side+xx,d=dx*dx+dy*dy;if(mask[p]&&d<best){seed=p;best=d;}}
@@ -1196,10 +1271,10 @@ async function refineSelectedCrack(point,job){
  if(length<12||component.length<9||thickness>Math.max(9,length*.32)){return;}
  const maskCanvas=document.createElement('canvas');maskCanvas.width=side;maskCanvas.height=side;
  const mc=maskCanvas.getContext('2d');const imageData=mc.createImageData(side,side);
- for(const p of component){const i=p*4;imageData.data[i]=255;imageData.data[i+1]=55;imageData.data[i+2]=50;imageData.data[i+3]=235;}
+ for(const p of component){const i=p*4;imageData.data[i]=255;imageData.data[i+1]=bridgeInfo.bridgePixels[p]?170:55;imageData.data[i+2]=bridgeInfo.bridgePixels[p]?25:50;imageData.data[i+3]=235;}
  mc.putImageData(imageData,0,0);
  const pixelProxy=thickness*cropW/side,est=assumedMmEstimate(pixelProxy);
- return {point,sx,sy,cropW,cropH,maskCanvas,length,pixels:component.length,pixelWidth:pixelProxy,mm:est?est.mm:null};
+ return {point,sx,sy,cropW,cropH,maskCanvas,length,pixels:component.length,pixelWidth:pixelProxy,mm:est?est.mm:null,bridges:bridgeInfo.count};
 }
 
 // v49: local feedback log, NOT a trained model or remote DB.
