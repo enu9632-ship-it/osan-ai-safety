@@ -824,7 +824,7 @@ function lineTestFrame(){
  // Temporal persistence stabilizes candidate marks against minor hand jitter.
  if(!lineHistory||lineHistory.length!==cleaned.length)lineHistory=new Float32Array(cleaned.length);
  for(let i=0;i<cleaned.length;i++)lineHistory[i]=lineHistory[i]*.54+(cleaned[i]?1:0)*.46;
- // v43: trace long grout-like boundaries by sampling each row/column across the full image.
+ // v44: sparse long grout-like boundaries by sampling each row/column across the full image.
  // This is a geometric edge candidate detector, not a crack classifier.
  const longLines=[];
  function traceAxis(horizontal){
@@ -864,14 +864,18 @@ function lineTestFrame(){
  const vr=v.videoWidth/v.videoHeight,cr=vw/vh,displayW=vr>cr?vh*vr:vw,displayH=vr>cr?vh:vw/vr,ox=(vw-displayW)/2,oy=(vh-displayH)/2;
  const guide=box.querySelector('.scanframe'),fr=guide.getBoundingClientRect(),br=box.getBoundingClientRect();
  out.save();out.beginPath();out.rect(fr.left-br.left,fr.top-br.top,fr.width,fr.height);out.clip();
- out.fillStyle='rgba(255,201,48,.84)';
- const pw=Math.max(1.2,displayW/w*1.4),ph=Math.max(1.2,displayH/h*1.4);
- for(let y=3;y<h-3;y++)for(let x=3;x<w-3;x++){
-  const i=y*w+x;if(lineHistory[i]<.36)continue;
-  out.fillRect(ox+x*displayW/w,oy+y*displayH/h,pw,ph);
+ // v44: do not paint every Sobel edge pixel. Dense texture caused a yellow screen.
+ // Keep only sparse, supported long-line segments; never turn texture into a full mask.
+ const MAX_LINES=18;
+ longLines.sort((a,b)=>(b.b-b.a)-(a.b-a.a));
+ const selectedLines=[];
+ for(const line of longLines){
+   if(selectedLines.length>=MAX_LINES)break;
+   if(selectedLines.some(prev=>prev.horizontal===line.horizontal&&Math.abs(prev.m-line.m)<7&&Math.min(prev.b,line.b)-Math.max(prev.a,line.a)>0))continue;
+   selectedLines.push(line);
  }
  out.strokeStyle='rgba(255,210,65,.85)';out.lineWidth=2;out.setLineDash([4,3]);
- for(const l of longLines){out.beginPath();if(l.horizontal){out.moveTo(ox+l.a*displayW/w,oy+l.m*displayH/h);out.lineTo(ox+l.b*displayW/w,oy+l.m*displayH/h)}else{out.moveTo(ox+l.m*displayW/w,oy+l.a*displayH/h);out.lineTo(ox+l.m*displayW/w,oy+l.b*displayH/h)}out.stroke()}
+ for(const l of selectedLines){out.beginPath();if(l.horizontal){out.moveTo(ox+l.a*displayW/w,oy+l.m*displayH/h);out.lineTo(ox+l.b*displayW/w,oy+l.m*displayH/h)}else{out.moveTo(ox+l.m*displayW/w,oy+l.a*displayH/h);out.lineTo(ox+l.m*displayW/w,oy+l.b*displayH/h)}out.stroke()}
  out.setLineDash([]);out.restore();
 }
 let scanPreviewOpen=false,scanPreviewImage=null;
