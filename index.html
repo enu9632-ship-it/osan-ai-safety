@@ -769,34 +769,72 @@ $('measureCanvas').addEventListener('click',measureClick);
 $('referenceMm').addEventListener('change',()=>{if(measurePoints.length===4)measureCalculate()});
 measureDraw();
 
-/* v41 diagnostic: supplemental line candidates, NOT confirmed cracks. */
+/* v42: adaptive multi-line candidates with short-gap bridging and temporal persistence.
+   Yellow = image edge candidates only; NEVER count as confirmed cracks. */
 let lineTestEnabled=false,lineTestTimer=null;
-const lineTestCanvas=document.createElement('canvas');lineTestCanvas.width=320;lineTestCanvas.height=240;
-function disableLineTest(){lineTestEnabled=false;if(lineTestTimer)clearInterval(lineTestTimer);lineTestTimer=null;const el=$('edgeOverlay');if(el)el.getContext('2d').clearRect(0,0,el.width,el.height);}
-function toggleLineTest(){} // removed separate test button; supplementary edges always run
+const lineTestCanvas=document.createElement('canvas');lineTestCanvas.width=480;lineTestCanvas.height=320;
+let lineHistory=null;
+function disableLineTest(){lineTestEnabled=false;lineHistory=null;if(lineTestTimer)clearInterval(lineTestTimer);lineTestTimer=null;const el=$('edgeOverlay');if(el)el.getContext('2d').clearRect(0,0,el.width,el.height);}
+function toggleLineTest(){} // candidate lines run in normal inspection
 function lineTestFrame(){
  if(!liveEnabled||scanPreviewOpen||!stream||!$('video').videoWidth)return;
  const v=$('video'),c=lineTestCanvas,ctx=c.getContext('2d',{willReadFrequently:true}),w=c.width,h=c.height;
  ctx.drawImage(v,0,0,w,h);
  const rgba=ctx.getImageData(0,0,w,h).data,g=new Float32Array(w*h);
  for(let i=0;i<g.length;i++)g[i]=rgba[i*4]*.299+rgba[i*4+1]*.587+rgba[i*4+2]*.114;
- const edges=new Uint8Array(w*h);
+ // Locally normalized Sobel: captures faint grout under changing illumination.
+ const strength=new Float32Array(w*h),angles=new Uint8Array(w*h);
  for(let y=2;y<h-2;y++)for(let x=2;x<w-2;x++){
   const i=y*w+x;
   const gx=-g[i-w-1]-2*g[i-1]-g[i+w-1]+g[i-w+1]+2*g[i+1]+g[i+w+1];
   const gy=-g[i-w-1]-2*g[i-w]-g[i-w+1]+g[i+w-1]+2*g[i+w]+g[i+w+1];
-  if(Math.hypot(gx,gy)>135)edges[i]=1;
+  strength[i]=Math.hypot(gx,gy);
+  angles[i]=Math.abs(gx)>Math.abs(gy)*1.6?1:Math.abs(gy)>Math.abs(gx)*1.6?2:3;
  }
- // Only display supported, thin, locally continuous segments; this includes tile grout.
+ const edge=new Uint8Array(w*h);
+ // Blockwise adaptive threshold: a fixed threshold misses weak sections of the same line.
+ const bs=24;
+ for(let by=2;by<h-2;by+=bs)for(let bx=2;bx<w-2;bx+=bs){
+  const ex=Math.min(w-2,bx+bs),ey=Math.min(h-2,by+bs);let sum=0,sum2=0,n=0;
+  for(let y=by;y<ey;y+=2)for(let x=bx;x<ex;x+=2){let s=strength[y*w+x];sum+=s;sum2+=s*s;n++}
+  const mean=sum/Math.max(1,n),sd=Math.sqrt(Math.max(0,sum2/Math.max(1,n)-mean*mean));
+  const threshold=Math.max(24,Math.min(115,mean+sd*.58));
+  for(let y=by;y<ey;y++)for(let x=bx;x<ex;x++){const i=y*w+x;if(strength[i]>threshold)edge[i]=1}
+ }
+ // Bridge only short gaps with directional support (up to 5 px).
+ const joined=edge.slice();
+ for(let y=4;y<h-4;y++)for(let x=4;x<w-4;x++){
+  const i=y*w+x;if(edge[i])continue;
+  const dirs=[[1,0],[0,1],[1,1],[1,-1]];
+  for(const [dx,dy] of dirs){
+   let left=0,right=0;
+   for(let k=1;k<=3;k++){if(edge[(y-dy*k)*w+x-dx*k]){left=k;break}}
+   for(let k=1;k<=3;k++){if(edge[(y+dy*k)*w+x+dx*k]){right=k;break}}
+   if(left&&right&&left+right<=5){joined[i]=1;break}
+  }
+ }
+ // Local continuity filter avoids displaying isolated speckles.
+ const cleaned=new Uint8Array(w*h);
+ for(let y=3;y<h-3;y++)for(let x=3;x<w-3;x++){
+  const i=y*w+x;if(!joined[i])continue;
+  let neighbors=0;
+  for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)if((dx||dy)&&joined[i+dy*w+dx])neighbors++;
+  if(neighbors>=3)cleaned[i]=1;
+ }
+ // Temporal persistence stabilizes candidate marks against minor hand jitter.
+ if(!lineHistory||lineHistory.length!==cleaned.length)lineHistory=new Float32Array(cleaned.length);
+ for(let i=0;i<cleaned.length;i++)lineHistory[i]=lineHistory[i]*.54+(cleaned[i]?1:0)*.46;
  const overlay=$('edgeOverlay'),box=$('cameraBox'),vw=box.clientWidth,vh=box.clientHeight,dpr=Math.min(2,devicePixelRatio||1);
- overlay.width=Math.round(vw*dpr);overlay.height=Math.round(vh*dpr);
+ if(overlay.width!==Math.round(vw*dpr)||overlay.height!==Math.round(vh*dpr)){overlay.width=Math.round(vw*dpr);overlay.height=Math.round(vh*dpr)}
  const out=overlay.getContext('2d');out.setTransform(dpr,0,0,dpr,0,0);out.clearRect(0,0,vw,vh);
  const vr=v.videoWidth/v.videoHeight,cr=vw/vh,displayW=vr>cr?vh*vr:vw,displayH=vr>cr?vh:vw/vr,ox=(vw-displayW)/2,oy=(vh-displayH)/2;
  const guide=box.querySelector('.scanframe'),fr=guide.getBoundingClientRect(),br=box.getBoundingClientRect();
- out.save();out.beginPath();out.rect(fr.left-br.left,fr.top-br.top,fr.width,fr.height);out.clip();out.fillStyle='rgba(255,187,50,.66)';
- for(let y=3;y<h-3;y+=2)for(let x=3;x<w-3;x+=2){const i=y*w+x;if(!edges[i])continue;
-  const neighbors=edges[i-1]+edges[i+1]+edges[i-w]+edges[i+w]+edges[i-w-1]+edges[i+w+1];if(neighbors<2)continue;
-  out.fillRect(ox+(x+.5)*displayW/w,oy+(y+.5)*displayH/h,Math.max(1,displayW/w*1.1),Math.max(1,displayH/h*1.1));
+ out.save();out.beginPath();out.rect(fr.left-br.left,fr.top-br.top,fr.width,fr.height);out.clip();
+ out.fillStyle='rgba(255,201,48,.84)';
+ const pw=Math.max(1.2,displayW/w*1.4),ph=Math.max(1.2,displayH/h*1.4);
+ for(let y=3;y<h-3;y++)for(let x=3;x<w-3;x++){
+  const i=y*w+x;if(lineHistory[i]<.36)continue;
+  out.fillRect(ox+x*displayW/w,oy+y*displayH/h,pw,ph);
  }
  out.restore();
 }
@@ -816,7 +854,7 @@ function showScanPreview(analyzed){
  scanPreviewImage=scanPreviewCapture();scanPreviewOpen=true;
  $('scanPreviewPhoto').src=scanPreviewImage||'';
  $('scanPreviewTitle').textContent=analyzed?'5초 관찰 결과':'5초 관찰 완료 · AI 분석 미확인';
- $('scanPreviewDesc').textContent=analyzed?'빨강: AI 균열 의심 · 노랑: 선형 후보(타일 줄눈 포함). 실제 손상 여부는 별도 확인이 필요합니다.':'분석이 완료되지 않아 균열 여부를 확인하지 못했습니다. 다시 점검해 주세요.';
+ $('scanPreviewDesc').textContent=analyzed?'빨강: AI 균열 의심 · 노랑: 영상의 선형 경계 후보(타일 줄눈·그림자 포함). 노란 선은 균열 판정이나 균열 건수가 아닙니다.':'분석이 완료되지 않아 균열 여부를 확인하지 못했습니다. 다시 점검해 주세요.';
  $('scanPreview').classList.add('show');
 }
 function continueScanPreview(){
