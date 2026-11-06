@@ -112,7 +112,7 @@ body.scan-immersive #scan .caption-panel{bottom:calc(78px + env(safe-area-inset-
 #scanPreview.show{display:flex}
 .scan-preview-card{background:#fff;color:#14283d;border-radius:18px;padding:16px;width:min(100%,520px);max-height:94dvh;overflow:auto;display:flex;flex-direction:column;gap:12px}
 .scan-preview-card img{width:100%;max-height:58dvh;object-fit:contain;background:#0c2035;border-radius:10px}
-.scan-preview-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.scan-preview-actions button{white-space:normal!important;line-height:1.35;min-height:54px}.scan-preview-actions .save-scan{grid-column:1/-1;background:#1668d9;color:white}.scan-preview-actions .skip-scan{background:#eef2f7;color:#29405a}.scan-preview-actions .retry-scan{background:#fff4e3;color:#85520a}
+.scan-preview-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.scan-preview-actions button{white-space:normal!important;line-height:1.35;min-height:54px}.scan-preview-actions .save-scan{grid-column:1/-1;background:#1668d9;color:white}.scan-preview-actions .retry-scan{grid-column:1/-1}.scan-preview-actions .skip-scan{background:#eef2f7;color:#29405a}.scan-preview-actions .retry-scan{background:#fff4e3;color:#85520a}
 .scan-preview-actions button{padding:14px 8px;border:0;border-radius:11px;background:#1668d9;color:#fff;font-size:15px;font-weight:800;white-space:nowrap}
 .scan-preview-actions button:first-child{background:#e9f1ff;color:#1650a0}
 #edgeOverlay{display:none!important;visibility:hidden!important;opacity:0!important}
@@ -125,7 +125,7 @@ body.scan-immersive #scan .caption-panel{bottom:calc(78px + env(safe-area-inset-
 #modelReadyGate .gate-actions{display:none;gap:8px;flex-direction:column;margin-top:18px}#modelReadyGate .gate-actions button{border:0;border-radius:10px;padding:12px;font-weight:800;background:#2279e7;color:white}#modelReadyGate .gate-actions .secondary{background:#30475f}
 #refineProgress{display:none;margin:8px 0 12px;padding:12px;background:#e9f3ff;border-radius:11px;color:#174c84;font-size:13px;font-weight:800}
 #refineProgress.show{display:block}#refineBar{height:7px;border-radius:8px;background:#c8ddf6;overflow:hidden;margin-top:9px}#refineBarFill{height:100%;width:0;background:#1872e8;transition:width .15s}
-</style></head><body><div id="modelReadyGate" role="dialog" aria-modal="true" aria-labelledby="gateTitle"><div class="gate-card"><div class="gate-spin" id="gateSpinner"></div><h2 id="gateTitle">AI 분석 모델 준비 중</h2><p id="gateMessage">카메라와 균열 분석 모델을 연결하고 있습니다. 준비가 완료되면 점검 화면이 자동으로 열립니다.</p><div class="gate-actions" id="gateActions"><button type="button" onclick="retryModelReadyGate()">AI 다시 연결하기</button><button class="secondary" type="button" onclick="leaveModelReadyGate()">돌아가기</button></div><p style="font-size:12px;color:#a8c4dc">처음 접속하거나 네트워크가 느리면 모델 다운로드에 시간이 걸릴 수 있습니다.</p></div></div><div id="scanPreview" role="dialog" aria-modal="true" aria-labelledby="scanPreviewTitle"><div class="scan-preview-card"><h2 id="scanPreviewTitle" style="margin:0">5초 관찰 결과 <small id="buildVersion" style="font-size:12px;color:#0b65d8;font-weight:800">v48 · AI 준비 후 점검</small></h2><img id="scanPreviewPhoto" alt="5초 관찰 시점의 카메라 영상과 선형 후보 표시"><div id="refineProgress" role="status" aria-live="polite"><span id="refineProgressLabel">정밀 분석 준비 중</span><div id="refineBar"><div id="refineBarFill"></div></div></div><p id="scanPreviewDesc" style="margin:0;font-size:13px;line-height:1.6">AI 분석 결과는 현장 안전 판정이 아닙니다.</p><div class="scan-preview-actions"><button class="save-scan" type="button" onclick="saveAndContinueScanPreview()">✓ 점검 내용 저장하고 계속하기</button><button class="skip-scan" type="button" onclick="discardAndContinueScanPreview()">저장하지 않고 계속하기</button><button class="retry-scan" type="button" onclick="retryScanPreview()">같은 부위 재점검</button></div><p style="margin:0;font-size:12px;color:#64748b">저장한 사진과 관찰 내용은 이번 점검의 결과에 포함됩니다. 저장하지 않으면 이번 5초 구간의 자동 기록도 제외됩니다.</p></div></div><div id="aiPrepare" class="ai-prepare" role="dialog" aria-modal="true" aria-labelledby="prepareTitle" aria-live="polite"><div class="prepare-card"><div class="prepare-mark">✳</div><h2 class="prepare-title" id="prepareTitle">AI 안전점검이 곧 시작됩니다</h2><div class="prepare-spinner" id="prepareSpinner"></div><p class="prepare-detail" id="prepareDetail">AI 분석 기능을 준비하고 있습니다.</p><p class="prepare-small">카메라는 먼저 실행하고 AI 모델은 별도로 준비합니다.</p><div class="prepare-error" id="prepareError"><div id="prepareErrorText"></div><button type="button" onclick="prepareInspection()">다시 시도</button><button type="button" onclick="cancelPreparation()">돌아가기</button></div></div></div><div class="app"><header class="top"><div class="brand"><span class="logo">✳</span>오산 <span style="color:#126ce9">AI 안전점검</span></div><small>시민과 함께하는 시설물 위험징후 기록 서비스 · 시제품</small></header><nav class="nav" aria-label="서비스 메뉴"><button id="nav-home" class="on" onclick="go('home')">⌂ 홈</button><button id="nav-form" onclick="go('form')">📷 AI 안전점검</button><button id="nav-records" onclick="go('recordsTab')">📝 관찰 사항 기록</button><button id="nav-compare" onclick="go('compare')">📏 균열 변화 비교</button><button id="nav-expert" onclick="go('expert')">👷 전문가에게 문의</button></nav><main class="main">
+</style></head><body><div id="modelReadyGate" role="dialog" aria-modal="true" aria-labelledby="gateTitle"><div class="gate-card"><div class="gate-spin" id="gateSpinner"></div><h2 id="gateTitle">AI 분석 모델 준비 중</h2><p id="gateMessage">카메라와 균열 분석 모델을 연결하고 있습니다. 준비가 완료되면 점검 화면이 자동으로 열립니다.</p><div class="gate-actions" id="gateActions"><button type="button" onclick="retryModelReadyGate()">AI 다시 연결하기</button><button class="secondary" type="button" onclick="leaveModelReadyGate()">돌아가기</button></div><p style="font-size:12px;color:#a8c4dc">처음 접속하거나 네트워크가 느리면 모델 다운로드에 시간이 걸릴 수 있습니다.</p></div></div><div id="scanPreview" role="dialog" aria-modal="true" aria-labelledby="scanPreviewTitle"><div class="scan-preview-card"><h2 id="scanPreviewTitle" style="margin:0">5초 관찰 결과 <small id="buildVersion" style="font-size:12px;color:#0b65d8;font-weight:800">v49 · 경계 오탐 억제</small></h2><img id="scanPreviewPhoto" alt="5초 관찰 시점의 카메라 영상과 선형 후보 표시"><div id="refineProgress" role="status" aria-live="polite"><span id="refineProgressLabel">정밀 분석 준비 중</span><div id="refineBar"><div id="refineBarFill"></div></div></div><p id="scanPreviewDesc" style="margin:0;font-size:13px;line-height:1.6">AI 분석 결과는 현장 안전 판정이 아닙니다.</p><div class="scan-preview-actions"><button class="save-scan" type="button" onclick="saveAndContinueScanPreview()">✓ 균열 의심 기록 저장하고 계속하기</button><button class="save-scan" type="button" onclick="saveAndFinishScanPreview()">✓ 기록 저장하고 점검 결과 보기</button><button class="retry-scan" type="button" onclick="retryScanPreview()">↻ 균열이 아니거나 불확실해요 · 다시 점검</button></div><p style="margin:0;font-size:12px;color:#64748b">저장은 시민의 관찰 의견이며 균열 확정 판정이 아닙니다. 다시 점검은 균열이 아니라는 확정 판정이 아닙니다. 피드백은 이 기기에만 저장되며 AI 모델을 자동 학습시키지 않습니다. <button type="button" onclick="exportLocalScanFeedback()" style="border:0;background:transparent;color:#1656ac;text-decoration:underline;font-size:12px">피드백 내보내기</button></p></div></div><div id="aiPrepare" class="ai-prepare" role="dialog" aria-modal="true" aria-labelledby="prepareTitle" aria-live="polite"><div class="prepare-card"><div class="prepare-mark">✳</div><h2 class="prepare-title" id="prepareTitle">AI 안전점검이 곧 시작됩니다</h2><div class="prepare-spinner" id="prepareSpinner"></div><p class="prepare-detail" id="prepareDetail">AI 분석 기능을 준비하고 있습니다.</p><p class="prepare-small">카메라는 먼저 실행하고 AI 모델은 별도로 준비합니다.</p><div class="prepare-error" id="prepareError"><div id="prepareErrorText"></div><button type="button" onclick="prepareInspection()">다시 시도</button><button type="button" onclick="cancelPreparation()">돌아가기</button></div></div></div><div class="app"><header class="top"><div class="brand"><span class="logo">✳</span>오산 <span style="color:#126ce9">AI 안전점검</span></div><small>시민과 함께하는 시설물 위험징후 기록 서비스 · 시제품</small></header><nav class="nav" aria-label="서비스 메뉴"><button id="nav-home" class="on" onclick="go('home')">⌂ 홈</button><button id="nav-form" onclick="go('form')">📷 AI 안전점검</button><button id="nav-records" onclick="go('recordsTab')">📝 관찰 사항 기록</button><button id="nav-compare" onclick="go('compare')">📏 균열 변화 비교</button><button id="nav-expert" onclick="go('expert')">👷 전문가에게 문의</button></nav><main class="main">
 <section id="home" class="screen active"><div class="hero"><div><span class="pill">SMART SAFETY · OSAN</span><h1>우리 건물의 안전,<br>스마트폰으로 살펴보세요.</h1><p>카메라로 건물 곳곳을 확인하고, 부위별 점검 안내를 받으며 위험 징후를 직접 기록하세요. 과거 기록과 비교해 변화도 살펴볼 수 있습니다.</p><button class="btn white" onclick="go('form')">안전점검 시작하기 →</button></div><div class="hero-art">🏢<span style="font-size:60px;margin-left:-50px;margin-top:100px">🔎</span></div></div><div style="margin-top:14px"><button class="btn outline" onclick="go('expert')">👷 전문가에게 문의하기 →</button></div><div class="features"><div class="tile"><div class="ico">📷</div><b>카메라 점검</b><p>시설물 부위를 비추고 촬영하여 손상 징후를 기록합니다.</p></div><div class="tile"><div class="ico">🧱</div><b>부위별 점검 가이드</b><p>벽체·기둥·계단·난간·옹벽 등 부위별 확인사항을 안내합니다.</p></div><div class="tile"><div class="ico">📋</div><b>점검 결과 저장</b><p>사진과 관찰 내용을 저장하고 결과를 내려받습니다.</p></div></div><p class="muted" style="margin:20px 4px">※ AI가 균열·박락·부식 등 손상 의심 징후를 살펴보는 개발 시제품입니다. 손상을 놓치거나 잘못 표시할 수 있으므로 직접 확인이 필요합니다. 법정 안전점검·정밀안전진단 또는 구조안전 판정을 대체하지 않습니다.</p></section>
 <section id="form" class="screen"><div class="sectionhead"><div><h2>건물 기본정보 입력</h2><p>건물 정보를 입력하면 부위별 확인사항을 안내합니다.</p></div><span class="steps">01 건물정보 → 02 카메라 점검 → 03 결과</span></div><div class="panel"><form id="buildingForm" class="formgrid"><div><label for="bname">건물명 *</label><input id="bname" required placeholder="예: 우리아파트 101동" maxlength="70"></div><div><label for="btype">건물 용도 *</label><select id="btype" required><option value="">선택해주세요</option><option>공동주택</option><option>단독주택</option><option>근린생활시설</option><option>업무시설</option><option>교육시설</option><option>기타</option></select></div><div><label for="byear">준공연도 (선택)</label><input id="byear" type="number" min="1900" max="2100" placeholder="예: 2008"></div><div><label for="bfloors">지상 층수 (선택)</label><input id="bfloors" type="number" min="1" max="200" placeholder="예: 15"></div><div><label for="bstructure">구조형식 (아는 경우만)</label><select id="bstructure"><option>모름</option><option>철근콘크리트조</option><option>철골조</option><option>조적조</option><option>목조</option><option>기타</option></select></div><div><label for="barea">점검 위치 (선택)</label><input id="barea" placeholder="예: 1층 계단실, 외벽 동측"></div><div class="full"><label for="bnote">특이사항 (선택)</label><textarea id="bnote" rows="2" placeholder="예: 최근 벽면 균열이 눈에 띄기 시작함"></textarea></div></form><div class="note" style="margin-top:18px">건물명과 입력 정보는 이 기기의 브라우저에만 보관됩니다. 주소나 거주자 정보 등 불필요한 개인정보는 입력하지 마세요. 구조형식을 모르면 '모름'으로 두어도 됩니다.</div><div class="actions"><button class="btn outline" onclick="go('home')">이전</button><button class="btn" onclick="startInspection()">카메라 점검 시작 →</button></div></div></section>
 <section id="scan" class="screen"><div class="sectionhead"><div><h2>카메라 안전점검</h2><p id="scanBuilding">시설물을 천천히 확인하고 관찰한 사항을 기록하세요.</p></div><span class="steps">02 카메라 점검</span></div><div class="scanlayout"><div><div class="camera" id="cameraBox"><video id="video" autoplay playsinline muted></video><div class="camfallback" id="camfallback"><div class="big">📷</div><b>카메라 연결 대기</b><p style="font-size:13px;line-height:1.8">카메라 접근을 허용하면 영상이 표시됩니다.<br>PC에서는 사진 파일을 불러올 수도 있습니다.</p></div><div class="scanframe"></div><div class="scan-countdown" id="scanCountdown" aria-hidden="true"><div class="count-num" id="scanCountdownNum">5</div><div class="count-label" id="scanCountdownLabel">AI 관찰 중</div><div class="count-track"><div class="count-progress" id="scanCountdownProgress"></div></div></div><canvas id="defectOverlay" class="defect-overlay" aria-label="실험적 균열 탐지 영역 표시"></canvas><canvas id="edgeOverlay" class="defect-overlay" aria-label="선형 후보 보조 표시" style="display:none!important;visibility:hidden!important"></canvas><div class="camtop"><span class="camtag">● 현장 관찰 모드</span><span class="ai-mini" id="inspectMini" role="status" aria-live="polite"><span class="inspect-led" id="inspectLed"></span><span id="inspectHeadline">AI 대기</span></span><span class="camtag" id="areaTag">벽체</span></div><select id="scanAreaSelect" class="hidden" aria-label="점검 부위 직접 선택" onchange="selectArea(this.value)"><option>벽체</option><option>바닥</option><option>천장</option><option>기둥·보</option><option>계단실</option><option>난간</option><option>외벽</option><option>옹벽</option><option>기타</option></select><div class="scan-float-controls"><button id="scanVoiceBtn" onclick="toggleScanVoice()" aria-label="음성 안내 켜기 또는 끄기">음성</button><button class="scan-retry" onclick="restartScanCycle()">재점검</button><button onclick="capture()">촬영</button><button class="scan-exit" onclick="exitImmersiveScan()">점검 종료</button></div><div class="camfoot"><button onclick="openCamera()">📹 카메라 켜기</button><button onclick="capture()">📸 촬영</button><button onclick="document.getElementById('fileInput').click()">🖼 사진 선택</button><input id="fileInput" class="hidden" type="file" accept="image/*" capture="environment" onchange="loadPhoto(event)"></div></div><div class="caption-panel" id="captionPanel" role="status" aria-live="polite"><div class="caption-kicker"><span>✦ 현장 점검 안내</span><span id="captionArea">벽체 · 대기</span></div><div class="caption-text" id="captionText">현재 점검할 벽체를 비춰주세요.</div><div class="caption-sub" id="captionSub">안내 모드: 선택한 점검 부위의 확인사항을 자막으로 안내합니다. AI가 손상 의심 징후를 탐색하지만 놓치거나 잘못 표시할 수 있습니다.</div></div><div class="panel" style="margin:10px 0"><div class="livehead"><b>점검 안내</b><span id="liveStatus" class="livebadge">카메라 대기</span></div><p class="hint">카메라 화면은 외부 서버에 전송하지 않습니다. 부위를 선택하면 점검 항목이 자막으로 표시되며, 발견한 이상은 관찰 사항 기록 탭에 직접 기록하세요.</p><div class="liveactions"><button class="btn" id="liveStart" onclick="startLive()">▶ 안내 다시 시작</button><button class="btn outline" id="liveStop" onclick="stopLive()" disabled>■ 안내 중지</button></div><label style="margin-top:12px"><input id="voiceOn" type="checkbox" checked style="width:auto;margin-right:6px">음성 안내</label><div id="liveFeed" class="livefeed" aria-live="polite" style="display:none"></div></div><span id="candidateStatus" class="hidden" aria-hidden="true"></span><div class="sensor-panel"><b>📐 휴대폰 방향 센서</b> · <span id="orientationStatus">센서 대기</span><p class="hint">GPS가 아닌 기울기 센서로 촬영 방향을 추정합니다. 카메라 종류·기기 방향에 따라 오차가 있으므로 실제 부위와 대조하세요.</p><label><input type="checkbox" id="autoArea" checked style="width:auto"> 방향 센서로 천장·벽체·바닥 구분 (추정)</label></div>
@@ -887,14 +887,14 @@ let scanPreviewOpen=false,scanPreviewImage=null;
 let scanPreviewJob=0,scanPreviewRefining=false;
 let scanCycleRecordIds=new Set(),scanCycleAutoLastAt={};
 function checkpointScanCycle(){scanCycleRecordIds=new Set(records.map(r=>r.id));scanCycleAutoLastAt={...autoLastAt};}
-function scanPreviewCapture(){
+function scanPreviewCapture(includeOverlay=false){
  const v=$('video'),box=$('cameraBox');if(!v.videoWidth)return null;
  const w=box.clientWidth,h=box.clientHeight;if(!w||!h)return null;
  const scale=Math.min(2,1100/w),c=document.createElement('canvas');c.width=Math.round(w*scale);c.height=Math.round(h*scale);
  const ctx=c.getContext('2d');ctx.scale(scale,scale);
  const vr=v.videoWidth/v.videoHeight,cr=w/h,dw=vr>cr?h*vr:w,dh=vr>cr?h:w/vr;
  ctx.drawImage(v,(w-dw)/2,(h-dh)/2,dw,dh);
- for(const id of ['defectOverlay']){const layer=$(id);if(layer&&layer.width)ctx.drawImage(layer,0,0,w,h);}
+ if(includeOverlay){for(const id of ['defectOverlay']){const layer=$(id);if(layer&&layer.width)ctx.drawImage(layer,0,0,w,h);}}
  return c.toDataURL('image/jpeg',.85);
 }
 // v47: high-resolution still-image second pass. Four overlapping 512px tiles
@@ -953,6 +953,22 @@ async function refineScanPreview(imageUrl,job){
    }
    const length=Math.max(maxx-minx+1,maxy-miny+1),thickness=tail/Math.max(1,length);
    if(tail<([16,12,9][sens])||length<([20,15,12][sens])||thickness>Math.max(8,length*.32))continue;
+   // Geometric false-positive suppression. A closed rectangular outline with
+   // long occupied sides is more likely to be an outlet/cover edge than a crack.
+   // Conservative: do not suppress a lone straight crack or a tile grout line.
+   const bw=maxx-minx+1,bh=maxy-miny+1;
+   if(bw>34&&bh>34&&bw/bh>.35&&bw/bh<3.2){
+    const sideCounts=[0,0,0,0];
+    const margin=Math.max(2,Math.min(5,Math.round(Math.min(bw,bh)*.04)));
+    for(let k=0;k<tail;k++){const p=q[k],px=p%side,py=(p/side)|0;
+     if(Math.abs(px-minx)<=margin)sideCounts[0]++;
+     if(Math.abs(px-maxx)<=margin)sideCounts[1]++;
+     if(Math.abs(py-miny)<=margin)sideCounts[2]++;
+     if(Math.abs(py-maxy)<=margin)sideCounts[3]++;
+    }
+    const sides=[sideCounts[0]/bh,sideCounts[1]/bh,sideCounts[2]/bw,sideCounts[3]/bw];
+    if(sides.filter(v=>v>.58).length>=3)continue;
+   }
    found++;
    for(let i=0;i<tail;i++){const p=q[i],j=p*4;result[j]=255;result[j+1]=67;result[j+2]=58;result[j+3]=210;}
   }
@@ -966,13 +982,13 @@ async function refineScanPreview(imageUrl,job){
  scanPreviewImage=base.toDataURL('image/jpeg',.88);
  $('scanPreviewPhoto').src=scanPreviewImage;
  scanPreviewRefining=false;$('refineProgressLabel').textContent='정밀 분석 완료 · 4/4 구역';$('refineBarFill').style.width='100%';
- $('scanPreviewDesc').textContent=found?'정밀 재분석 완료: 사진을 4개 구역으로 나누어 AI가 감지한 균열 의심 픽셀을 빨간색으로 표시했습니다. 일부 구간은 놓칠 수 있으며 실제 손상 여부는 현장 확인이 필요합니다.':'정밀 재분석에서 뚜렷한 균열 후보를 확인하지 못했습니다. 균열이 없다는 뜻은 아닙니다. 촬영 거리·조명을 조절해 재점검하세요.';
+ $('scanPreviewDesc').textContent=found?'정밀 분석 완료: 사진을 4구역으로 분석하고 사각형 테두리 형태의 일부 오탐을 제외했습니다. 빨간색은 균열 의심 후보이며 콘센트·전선 등은 여전히 오인식될 수 있습니다.':'정밀 재분석에서 뚜렷한 균열 후보를 확인하지 못했습니다. 균열이 없다는 뜻은 아닙니다. 촬영 거리·조명을 조절해 재점검하세요.';
  return true;
 }
 function showScanPreview(analyzed){
  disableLineTest();
  if(scanPreviewOpen)return;
- scanPreviewImage=scanPreviewCapture();scanPreviewOpen=true;$('refineProgress').classList.remove('show');
+ scanPreviewImage=scanPreviewCapture(false);scanPreviewOpen=true;$('refineProgress').classList.remove('show');
  const job=++scanPreviewJob;
  $('scanPreviewPhoto').src=scanPreviewImage||'';
  $('scanPreviewTitle').firstChild.textContent=analyzed?'5초 관찰 결과 ':'5초 관찰 완료 · AI 분석 미확인 ';
@@ -983,13 +999,25 @@ function showScanPreview(analyzed){
   if(job===scanPreviewJob&&scanPreviewOpen)$('scanPreviewDesc').textContent='정밀 재분석을 완료하지 못했습니다. 현재 사진의 표시는 실시간 AI 탐지 결과이며 실제 균열 여부는 확인이 필요합니다.';
  });}
 }
+
+// v49: local feedback log, NOT a trained model or remote DB.
+function storeLocalScanFeedback(label){
+ try{const key='osan_scan_feedback_v49';const items=JSON.parse(localStorage.getItem(key)||'[]');
+ items.push({time:new Date().toISOString(),label,area,model:'v49',note:'사용자 선택은 검증된 정답이 아님'});
+ localStorage.setItem(key,JSON.stringify(items.slice(-200)));}catch(e){console.warn('로컬 피드백 저장 실패',e);}
+}
+function exportLocalScanFeedback(){const s=localStorage.getItem("osan_scan_feedback_v49")||"[]";const b=new Blob([s],{type:"application/json"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download="osan_scan_feedback.json";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);}
+function saveAndFinishScanPreview(){
+ if(!scanPreviewOpen||scanPreviewRefining){if(scanPreviewRefining)alert('정밀 분석이 끝날 때까지 기다려 주세요.');return;}
+ saveAndContinueScanPreview();stopLive(false);finish();
+}
 function saveAndContinueScanPreview(){
  if(!scanPreviewOpen)return;
  if(scanPreviewRefining){alert('사진 정밀 분석이 진행 중입니다. 잠시 기다려 주세요.');return;}
  const newRecords=records.filter(r=>!scanCycleRecordIds.has(r.id)&&r.source==='ai');
  if(newRecords.length){for(const r of newRecords){if(scanPreviewImage)r.photo=scanPreviewImage;r.memo=(r.memo||'')+' · 5초 관찰 사진 확인 후 저장';}}
  else {records.push({id:Date.now()+Math.random(),area,finding:'기타',memo:'5초 영상 관찰 기록 · 빨간색은 AI 균열 의심. 노란색 선형 후보 표시는 오탐 방지를 위해 일시 중지됨. 손상 여부 미확인',width:null,at:new Date().toISOString(),photo:scanPreviewImage,source:'manual',verified:false});}
- renderRecords();continueScanPreview();
+ storeLocalScanFeedback("suspected_crack_saved");renderRecords();continueScanPreview();
 }
 function discardAndContinueScanPreview(){
  if(!scanPreviewOpen)return;
@@ -1006,5 +1034,5 @@ function continueScanPreview(){
  $('captionSub').textContent='부위를 바꾼 뒤 5초 동안 카메라를 고정해 주세요.';
  voiceSay('다음 점검할 부위를 비춰주세요.','area');
 }
-function retryScanPreview(){discardAndContinueScanPreview();restartScanCycle();}
+function retryScanPreview(){if(scanPreviewRefining){alert("정밀 분석이 끝날 때까지 기다려 주세요.");return;}storeLocalScanFeedback("uncertain_or_recheck");discardAndContinueScanPreview();restartScanCycle();}
 </script><div class="photo-viewer" id="photoViewer" role="dialog" aria-modal="true" aria-label="점검 사진 확대" onclick="if(event.target===this)closePhotoViewer()"><div class="photo-viewer-inner"><div class="photo-viewer-head"><div><b id="photoViewerTitle">균열 의심 사진</b><p id="photoViewerMeasure">mm 미측정</p></div><button type="button" onclick="closePhotoViewer()" aria-label="사진 닫기">✕ 닫기</button></div><img id="photoViewerImage" alt="확대한 균열 촬영 사진"><p class="photo-viewer-note">사진에 표시된 mm는 임의 촬영거리(20cm)를 가정한 시뮬레이션 값입니다. 실제 mm 계측이 아니므로 반드시 현장에서 측정해 수정하세요.</p></div></div></body></html>
