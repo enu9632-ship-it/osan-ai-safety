@@ -297,9 +297,37 @@ async function submitExpertRequest(){
          }
        }
        const bw=maxx-minx+1,bh=maxy-miny+1,length=Math.max(bw,bh),thickness=tail/Math.max(length,1);
+       // Reject compact patches, solid rectangular predictions and wide blobs.
+       // Preserve only pixels belonging to locally thin structures, not the entire mask.
+       const occupancy=tail/(bw*bh),aspect=length/Math.max(1,Math.min(bw,bh));
+       const localMask=new Set(queue.slice(0,tail));
+       const linePoints=[];
+       for(let qi=0;qi<tail;qi++){
+         const index=queue[qi],px=index%w,py=(index/w)|0;
+         let horizontal=1,vertical=1;
+         for(let step=1;step<=7;step++){
+           if(px-step>=0&&localMask.has(index-step))horizontal++;else break;
+         }
+         for(let step=1;step<=7;step++){
+           if(px+step<w&&localMask.has(index+step))horizontal++;else break;
+         }
+         for(let step=1;step<=7;step++){
+           if(py-step>=0&&localMask.has(index-step*w))vertical++;else break;
+         }
+         for(let step=1;step<=7;step++){
+           if(py+step<h&&localMask.has(index+step*w))vertical++;else break;
+         }
+         if(Math.min(horizontal,vertical)<=4)linePoints.push(index);
+       }
+       const lineRatio=linePoints.length/Math.max(1,tail);
+       const rectangularBlob=occupancy>.48&&aspect<3.2;
+       const tooThick=thickness>7.5&&aspect<4;
+       const thinEnough=linePoints.length>=Math.max(10,tail*.25)&&lineRatio>.28;
        // Exclude tiny dots, large patches, and thick/compact shapes; not a guarantee of a crack.
-       if(tail>=([24,13,8][sensitivity])&&tail<=3200&&length>=([30,20,13][sensitivity])&&thickness<=([9,13,16][sensitivity])&&scoreSum/tail>=([.94,.90,.85][sensitivity])){
-         components.push({minx,maxx,miny,maxy,pixels:tail,centerX:(minx+maxx)/2,centerY:(miny+maxy)/2,score:scoreSum/tail,points:queue.slice(0,tail)});
+       if(tail>=([24,13,8][sensitivity])&&tail<=2400&&length>=([30,20,13][sensitivity])&&
+          !rectangularBlob&&!tooThick&&thinEnough&&
+          thickness<=([7,9,11][sensitivity])&&scoreSum/tail>=([.94,.90,.85][sensitivity])){
+         components.push({minx,maxx,miny,maxy,pixels:linePoints.length,centerX:(minx+maxx)/2,centerY:(miny+maxy)/2,score:scoreSum/tail,points:Int32Array.from(linePoints)});
        }
      }
      components.sort((a,b)=>b.pixels-a.pixels);
@@ -313,7 +341,7 @@ async function submitExpertRequest(){
      crackCandidate=best;crackLastFrameAt=now;
      const confirmed=!!best&&crackStable>=([2,2,2][sensitivity]);
      crackHits=confirmed?Math.min(5,crackHits+1):0;
-     octx.clearRect(0,0,w,h);
+     octx.clearRect(0,0,vw,vh);
      if(confirmed){
        // Approximate thickness is component area / longest span, in 512px MODEL coordinates.
        // It is NOT a calibrated measurement and may be affected by segmentation errors.
@@ -332,7 +360,7 @@ async function submitExpertRequest(){
        for(let k=0;k<best.points.length;k+=Math.max(1,Math.floor(best.points.length/3500))){
          const idx=best.points[k],px=idx%512,py=(idx/512)|0;
          const x=offsetX+px*dx,y=offsetY+py*dy;
-         if(x>=gx&&x<=gx+gw&&y>=gy&&y<=gy+gh)octx.fillRect(x,y,Math.max(1.3,dx),Math.max(1.3,dy));
+         if(x>=gx&&x<=gx+gw&&y>=gy&&y<=gy+gh){octx.beginPath();octx.arc(x+dx/2,y+dy/2,Math.max(0.65,Math.min(dx,dy)*.46),0,Math.PI*2);octx.fill();}
        }
        const cx=offsetX+best.centerX*dx,cy=offsetY+best.centerY*dy;
        if(cx>=gx&&cx<=gx+gw&&cy>=gy&&cy<=gy+gh){
@@ -342,7 +370,7 @@ async function submitExpertRequest(){
          octx.beginPath();octx.roundRect(lx,ly,lw,23,7);octx.fill();octx.fillStyle='#fff';octx.fillText(label,lx+9,ly+16);
        }
        octx.restore();
-       defectMessage('⚠ 반복 확인된 균열 의심 영역 · 빨간 테두리 · 실제 균열인지 현장 확인 필요','warn');
+       defectMessage('⚠ 선형 균열 후보 · 빨간 점선형 표시 · 실제 균열인지 확인 필요','warn');
        addAutoFinding('균열 의심','균열 전용 모델에서 반복 탐지(오탐 가능). 픽셀 폭 추정은 캡처 사진 아래에서 확인; mm 측정은 눈금자 보정 필요');
        const msg='같은 화면 위치에서 균열 의심 영역이 반복 탐지되었습니다. 실제 균열인지 가까이서 확인해 주세요.';
        caption(msg,'균열 후보 자동 탐지 · 구조 안전성 판정 아님');
@@ -350,8 +378,10 @@ async function submitExpertRequest(){
          if($('autoDefectCapture').checked){lastCrackAt=now;captureCandidate();showAutoPixelEstimate();$('candidateStatus').textContent='균열 의심 화면 자동 캡처 완료. 사진 아래 픽셀 폭 추정값과 눈금자 보정 안내를 확인하세요.';}
        }
      }else if(best){
+       autoCrackEstimate=null;
        defectMessage('균열 후보 분석 중 · 후보가 다시 확인되면 사진에 표시합니다.');
      }else{
+       autoCrackEstimate=null;
        defectMessage('현재 화면에서 반복 확인된 균열 의심 영역 없음 · 손상 없음 또는 안전성 양호 판정 아님');
      }
      inspectSuccess('crack');const significant=confirmed;
@@ -493,11 +523,11 @@ function annotateCrackCandidate(){
  // These marks are AI hypotheses, not measured crack edges.
  ctx.fillStyle='rgba(255,73,68,.76)';
  for(let k=0;k<b.points.length;k+=Math.max(1,Math.floor(b.points.length/5500))){
-  const idx=b.points[k];ctx.fillRect((idx%512)*sx,Math.floor(idx/512)*sy,Math.max(1.4,sx),Math.max(1.4,sy));
+  const idx=b.points[k];{ctx.beginPath();ctx.arc(((idx%512)+.5)*sx,(Math.floor(idx/512)+.5)*sy,Math.max(.7,Math.min(sx,sy)*.48),0,Math.PI*2);ctx.fill();}
  }
  const cx=b.centerX*sx,cy=b.centerY*sy;
  const fs=Math.max(15,Math.min(29,c.width/40));ctx.font='bold '+fs+'px sans-serif';
- const label='AI 균열 의심 · '+candidate.pixels.toFixed(1)+' px (mm 미측정)';
+ const label='AI 선형 균열 후보 · mm 미측정';
  const bw=Math.min(c.width-20,ctx.measureText(label).width+22),bh=fs+18;
  const bx=Math.max(10,Math.min(c.width-bw-10,cx-bw/2)),by=Math.max(10,Math.min(c.height-bh-10,cy-55));
  ctx.fillStyle='rgba(14,33,55,.92)';ctx.beginPath();ctx.roundRect(bx,by,bw,bh,7);ctx.fill();
