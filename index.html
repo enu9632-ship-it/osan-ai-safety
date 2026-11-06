@@ -287,7 +287,6 @@ function generateAISummary(){
   lines.push('균열 의심 '+cracks.length+'건.');
   if(measured.length)lines.push('기록된 mm 값: '+measured.map(r=>r.area+' '+Number(r.width).toFixed(2)+'mm').join('; ')+'. 사용자가 입력하거나 보정한 값이며 AI가 자동 실측한 수치가 아닙니다.');
   if(pixelOnly.length)lines.push('AI 가정 추정값(실측 아님): '+pixelOnly.map(r=>r.area+' '+assumedMmEstimate(r.pixelWidth)?.mm.toFixed(2)+'mm').join('; ')+'. 촬영거리 20cm와 카메라 화각 60도를 임의로 가정한 계산 예시이므로 실제 폭과 크게 다를 수 있습니다. 반드시 현장 실측값으로 수정해 주세요.');
-  if(!measured.length)lines.push('검증된 자동 mm 계측 결과는 없습니다. 위 가정값은 카메라가 실제 거리를 측정한 결과가 아니며 안전성 판단이나 균열 변화량 계산에 사용해서는 안 됩니다.');
  }
  lines.push('【안전성 검토 의견】');
  if(serious.length)lines.push('철근 노출·박락·부식·변형 등으로 의심되는 기록이 있어 우선적으로 관리주체와 전문가의 현장 확인을 권합니다. 사진만으로 위험 정도를 판정하지 않습니다.');
