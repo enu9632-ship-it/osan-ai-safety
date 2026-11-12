@@ -801,7 +801,7 @@ function submitExpertRequest(){
    if(observationFingerprint){
      let difference=0;for(let i=0;i<current.length;i++)difference+=Math.abs(current[i]-observationFingerprint[i]);
      difference/=current.length;
-     if(difference>23){observationMotionHits++;if(observationMotionHits>=3)return false;}else{observationMotionHits=0;}
+     if(difference>23){observationMotionHits++;}else{observationMotionHits=0;}
    }
    observationFingerprint=current;observationStableChecks++;
    // Only accept a new frame after the video itself has advanced, at least 900ms later.
@@ -852,13 +852,9 @@ function submitExpertRequest(){
      scanCycleStart=now;scanCycleCrackStart=inspectCrackCount;checkpointScanCycle();resetObservationFrames();
      voiceSay('점검할 부위가 준비되었습니다. 3초간 화면을 고정해 주세요.','area');
    }
-   if(!observeStableScene(now)){
-     scanCycleStart=now;resetObservationFrames();
-     $('captionText').textContent='장면이 달라졌습니다. 같은 부위를 3초 동안 다시 비춰주세요.';
-     $('captionSub').textContent='카메라 흔들림 또는 화면 변화를 감지했습니다.';
-     if(progress)progress.style.width='0%';
-     return;
-   }
+   // Keep the original three-second observation countdown independent of motion checks.
+   // Collect video frames for the first precision analysis without restarting the timer.
+   observeStableScene(now);
    const elapsed=now-scanCycleStart;
    const seconds=Math.max(0,Math.ceil((3000-elapsed)/1000));
    if(panel)panel.classList.add('visible');
@@ -870,13 +866,6 @@ function submitExpertRequest(){
    $('captionSub').textContent='같은 장면을 3초간 기록합니다. 이후 균열·박락·부식 의심 징후를 재분석합니다.';
    // Wait for at least one completed crack inference in the cycle, but cap the wait.
    if(elapsed>=3000){
-     // Require at least 3 seconds between FIRST and LAST actual captured video frames.
-     // This prevents a 1-second view from passing after a blocked/delayed timer.
-     if(observationFrames.length<5||!observationFirstAt||observationLastAt-observationFirstAt<3000){
-       if(label)label.textContent='동일 장면 3초 기록 확인 중';
-       $('captionText').textContent='같은 화면을 실제 3초 동안 계속 비춰주세요.';
-       return;
-     }
      if(inspectCrackCount<=scanCycleCrackStart&&elapsed<6500){
        if(label)label.textContent='분석 마무리 중';
        $('captionText').textContent='AI 분석 결과를 확인하고 있습니다…';
