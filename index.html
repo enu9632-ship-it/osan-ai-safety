@@ -794,26 +794,26 @@ function submitExpertRequest(){
  // Timer callbacks can be delayed by ONNX inference on iOS, so elapsed time alone is insufficient.
  let observationFrames=[],observationLastSample=0,observationFingerprint=null,observationStableChecks=0;
  let observationFirstAt=0,observationLastAt=0,observationLastVideoTime=-1,observationMotionHits=0;
- function resetObservationFrames(){observationFrames=[];observationLastSample=0;observationFingerprint=null;observationStableChecks=0;observationFirstAt=0;observationLastAt=0;observationLastVideoTime=-1;observationMotionHits=0;}
+ let observationAnchor=null,observationCheckAt=0,observationCheckVideo=-1;
+ function resetObservationFrames(){observationFrames=[];observationLastSample=0;observationFingerprint=null;observationStableChecks=0;observationFirstAt=0;observationLastAt=0;observationLastVideoTime=-1;observationMotionHits=0;observationAnchor=null;observationCheckAt=0;observationCheckVideo=-1;}
+ function sceneDifference(a,b){
+   let sum=0,changed=0;for(let i=0;i<a.length;i++){const d=Math.abs(a[i]-b[i]);sum+=d;if(d>18)changed++;}
+   return sum/a.length>7||changed/a.length>.12;
+ }
  function observeStableScene(now){
-   const v=$('video');if(!v||!v.videoWidth||v.readyState<2)return false;
+   const v=$('video');if(!v||!v.videoWidth||v.readyState<2||v.paused||document.hidden)return false;
    const current=nearCheckFingerprint();if(!current)return false;
-   if(observationFingerprint){
-     let difference=0;for(let i=0;i<current.length;i++)difference+=Math.abs(current[i]-observationFingerprint[i]);
-     difference/=current.length;
-     if(difference>23){observationMotionHits++;if(observationMotionHits>=3)return false;}else{observationMotionHits=0;}
-   }
-   observationFingerprint=current;observationStableChecks++;
-   // Only accept a new frame after the video itself has advanced, at least 900ms later.
    const videoTime=v.currentTime;
-   if(now-observationLastSample>=500&&videoTime>observationLastVideoTime+0.12){
-     const frame=scanPreviewCapture(false);
-     if(frame){
-       if(!observationFirstAt)observationFirstAt=now;
-       observationFrames.push(frame);
-       if(observationFrames.length>12)observationFrames.shift();
-       observationLastSample=now;observationLastAt=now;observationLastVideoTime=videoTime;
-     }
+   // A gap or frozen video cannot count as continuous observation.
+   if(observationCheckAt&&(now-observationCheckAt>700||videoTime<=observationCheckVideo))return false;
+   if(observationAnchor&&(sceneDifference(current,observationAnchor)||sceneDifference(current,observationFingerprint)))return false;
+   if(!observationAnchor)observationAnchor=current.slice();
+   observationFingerprint=current;observationCheckAt=now;observationCheckVideo=videoTime;observationStableChecks++;
+   if(!observationFrames.length||now-observationLastSample>=450){
+     const frame=scanPreviewCapture(false);if(!frame)return false;
+     if(!observationFrames.length)observationFirstAt=now;
+     observationFrames.push(frame);if(observationFrames.length>12)observationFrames.shift();
+     observationLastSample=now;observationLastAt=now;observationLastVideoTime=videoTime;
    }
    return true;
  }
@@ -853,13 +853,14 @@ function submitExpertRequest(){
      voiceSay('점검할 부위가 준비되었습니다. 3초간 화면을 고정해 주세요.','area');
    }
    if(!observeStableScene(now)){
-     scanCycleStart=now;resetObservationFrames();
+     scanCycleStart=0;resetObservationFrames();
+     if(num)num.textContent='3';if(label)label.textContent='화면 고정 후 다시 시작';
      $('captionText').textContent='장면이 달라졌습니다. 같은 부위를 3초 동안 다시 비춰주세요.';
      $('captionSub').textContent='카메라 흔들림 또는 화면 변화를 감지했습니다.';
      if(progress)progress.style.width='0%';
      return;
    }
-   const elapsed=now-scanCycleStart;
+   const elapsed=Math.max(0,now-observationFirstAt);
    const seconds=Math.max(0,Math.ceil((3000-elapsed)/1000));
    if(panel)panel.classList.add('visible');
    if(num)num.textContent=String(seconds);
@@ -872,7 +873,7 @@ function submitExpertRequest(){
    if(elapsed>=3000){
      // Require at least 5 seconds between FIRST and LAST actual captured video frames.
      // This prevents a 1-second view from passing after a blocked/delayed timer.
-     if(observationFrames.length<5||!observationFirstAt||observationLastAt-observationFirstAt<3000){
+     if(observationFrames.length<5||!observationFirstAt||observationLastAt-observationFirstAt<3000||observationStableChecks<8){
        if(label)label.textContent='동일 장면 3초 기록 확인 중';
        $('captionText').textContent='같은 화면을 실제 3초 동안 계속 비춰주세요.';
        return;
@@ -893,8 +894,8 @@ function submitExpertRequest(){
      showScanPreview(analyzed);
    }
  }
-function startLive(){disableLineTest();if(!stream||!$('video').videoWidth){liveStatus('영상 준비 중');return}if(liveEnabled)return;liveEnabled=true;if(!orientationEnabled)enableOrientation();session++;inspectFrameCount=0;inspectCrackCount=0;inspectLastAt=0;inspectUpdate();resetScanCycle(area);if(inspectWatch)clearInterval(inspectWatch);inspectWatch=setInterval(()=>{inspectUpdate();scanCycleUpdate();/* 선형 후보 노란색 과표시 방지: 보조 오버레이 일시 중지 */},400);$('liveStart').disabled=true;$('liveStop').disabled=false;liveStatus('AI 준비 중');guidePrompt();if(crackSession)voiceStart();analyzeFrame();let ticks=0;liveTimer=setInterval(()=>{if((ticks++%2)===0)analyzeFrame();if(!lineTestEnabled){if(crackSession)analyzeCrack();else if(!crackFailure)ensureCrackModel()}},1400);analyzeCrack()}
- function stopLive(show=true){if(scanPreviewOpen){scanPreviewOpen=false;$('scanPreview').classList.remove('show')}disableLineTest();nearCheckBaseline=null;nearCheckCooldown=0;voiceStop();clearDefectOverlay();crackCandidate=null;crackStable=0;overlaySmoothCenter=null;crackHits=0;liveEnabled=false;resetScanCycle(area);session++;if(inspectWatch){clearInterval(inspectWatch);inspectWatch=null}inspectUpdate();if(liveTimer){clearInterval(liveTimer);liveTimer=null}const a=$('liveStart'),b=$('liveStop');if(a)a.disabled=false;if(b)b.disabled=true;if(show&&$('liveStatus')){liveStatus('분석 일시 중지');caption('화면 분석이 일시 중지되었습니다.','다시 시작 버튼을 눌러 재개할 수 있습니다.')}if('speechSynthesis' in window)window.speechSynthesis.cancel()}
+function startLive(){disableLineTest();if(!stream||!$('video').videoWidth){liveStatus('영상 준비 중');return}if(liveEnabled)return;liveEnabled=true;if(!orientationEnabled)enableOrientation();session++;inspectFrameCount=0;inspectCrackCount=0;inspectLastAt=0;inspectUpdate();resetScanCycle(area);if(inspectWatch)clearInterval(inspectWatch);inspectWatch=setInterval(()=>{inspectUpdate();scanCycleUpdate();/* 선형 후보 노란색 과표시 방지: 보조 오버레이 일시 중지 */},200);$('liveStart').disabled=true;$('liveStop').disabled=false;liveStatus('AI 준비 중');guidePrompt();if(crackSession)voiceStart();analyzeFrame();let ticks=0;liveTimer=setInterval(()=>{if((ticks++%2)===0)analyzeFrame();if(!lineTestEnabled){if(crackSession)analyzeCrack();else if(!crackFailure)ensureCrackModel()}},1400);analyzeCrack()}
+ function stopLive(show=true){scanPreviewJob++;clearScanSelectionUI();scanPreviewRefining=false;scanConfirmed=false;scanCandidateCanvas=null;scanOriginalPhoto=null;scanSelectedPhoto=null;analysisProgressStop();if(scanPreviewOpen){scanPreviewOpen=false;$('scanPreview').classList.remove('show')}disableLineTest();nearCheckBaseline=null;nearCheckCooldown=0;voiceStop();clearDefectOverlay();crackCandidate=null;crackStable=0;overlaySmoothCenter=null;crackHits=0;liveEnabled=false;resetScanCycle(area);session++;if(inspectWatch){clearInterval(inspectWatch);inspectWatch=null}inspectUpdate();if(liveTimer){clearInterval(liveTimer);liveTimer=null}const a=$('liveStart'),b=$('liveStop');if(a)a.disabled=false;if(b)b.disabled=true;if(show&&$('liveStatus')){liveStatus('분석 일시 중지');caption('화면 분석이 일시 중지되었습니다.','다시 시작 버튼을 눌러 재개할 수 있습니다.')}if('speechSynthesis' in window)window.speechSynthesis.cancel()}
  
 // Experimental pixel-pattern trigger: NOT a validated crack detector.
 let candidateHits=0,lastCandidateCapture=0,candidateCount=0;
@@ -1254,6 +1255,12 @@ async function refineScanPreview(imageUrl,job,frames){
  $('scanPreviewDesc').textContent=found?'1차 정밀분석 완료. 빨간색 의심 영역을 직접 터치해 확인하면 해당 위치를 확대 재분석합니다. 콘센트·전선 등 오탐은 여전히 가능합니다.':'뚜렷한 균열 후보가 없습니다. 균열이 없다는 뜻은 아니며 재점검을 권장합니다.';
  return true;
 }
+function clearScanSelectionUI(){
+ const cv=$('scanTouchCanvas');if(cv){cv.width=cv.width;}
+ chosenCracks=[];secondPassDetails=[];scanSelectedMask=null;scanSelectedPoint=null;
+ $('secondScanResults').classList.remove('show');$('secondScanResultImage').removeAttribute('src');$('secondScanResultSummary').textContent='';
+ $('scanPreview').classList.remove('result-ready');setScanSaveEnabled(false);
+}
 function showScanPreview(analyzed){
  analysisProgressStop();voiceStop();disableLineTest();
  // v67: Pause the live inference loop before the still-photo first pass.
@@ -1261,6 +1268,7 @@ function showScanPreview(analyzed){
  if(liveTimer){clearInterval(liveTimer);liveTimer=null;}
 
  if(scanPreviewOpen)return;
+ clearScanSelectionUI();
  $('scanPreview').classList.remove('result-ready');$('secondScanResults').classList.remove('show');$('secondScanResultImage').removeAttribute('src');chosenCracks=[];secondPassDetails=[];const capturedFrames=observationFrames.slice();scanPreviewImage=capturedFrames.length?capturedFrames[capturedFrames.length-1]:scanPreviewCapture(false);scanPreviewOpen=true;scanConfirmed=false;scanOriginalPhoto=null;scanCandidateCanvas=null;scanSelectedPhoto=null;scanSelectedMask=null;scanSelectedPoint=null;setScanSaveEnabled(false);$('scanSelectionStatus').textContent='1차 정밀분석 중입니다. 완료 후 빨간색 후보를 터치하세요.';$('refineProgress').classList.remove('show','analysis-error');
  const job=++scanPreviewJob;
  $('scanPreviewPhoto').src=scanPreviewImage||'';
@@ -1282,7 +1290,9 @@ function showScanPreview(analyzed){
 function setScanSaveEnabled(ok){for(const id of ['scanSaveContinue','scanSaveFinish']){const b=$(id);if(b)b.disabled=!ok;}}
 function updateChosenCracks(){
  const b=$('multiRefineButton');if(b){b.disabled=!chosenCracks.length||scanPreviewRefining;b.textContent=chosenCracks.length?'✓ '+chosenCracks.length+'개 선택 완료 · 2차 정밀분석 시작':'빨간 선을 먼저 선택하세요';}
- const cv=$('scanTouchCanvas');if(!cv||!scanCandidateCanvas)return;
+ const cv=$('scanTouchCanvas');if(!cv)return;
+ cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
+ if(!scanCandidateCanvas)return;
  cv.width=scanCandidateCanvas.width;cv.height=scanCandidateCanvas.height;
  const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);
  const maskCtx=scanCandidateCanvas.getContext('2d',{willReadFrequently:true});
@@ -1514,7 +1524,7 @@ function saveAndFinishScanPreview(){
 }
 function saveAndContinueScanPreview(){
  if(!scanPreviewOpen)return;
- if(scanPreviewRefining||!scanConfirmed||!secondPassDetails.length||!scanSelectedPhoto){alert('5초 관찰과 1·2차 정밀분석을 완료한 후 저장해 주세요.');return;}
+ if(scanPreviewRefining||!scanConfirmed||!secondPassDetails.length||!scanSelectedPhoto){alert('3초 관찰과 1·2차 정밀분석을 완료한 후 저장해 주세요.');return;}
  for(let i=records.length-1;i>=0;i--)if(!scanCycleRecordIds.has(records[i].id)&&records[i].source==='ai')records.splice(i,1);
  secondPassDetails.forEach((r,i)=>records.push({id:Date.now()+Math.random()+i,area,finding:'균열 의심',memo:'사용자 선택 후보 '+(i+1)+' · 2차 확대 분석 · AI 가정 폭 '+(r.mm===null?'추정 불가':r.mm.toFixed(2)+'mm')+' · 실측 필요',width:null,pixelWidth:r.pixelWidth,measurementStatus:'가정 추정 · 실측 아님',at:new Date().toISOString(),photo:scanSelectedPhoto,source:'manual',inspectionComplete:true,verified:false}));
  storeLocalScanFeedback("suspected_crack_saved");renderRecords();continueScanPreview();
@@ -1527,6 +1537,7 @@ function discardAndContinueScanPreview(){
  renderRecords();continueScanPreview();
 }
 function continueScanPreview(){
+ clearScanSelectionUI();
  scanPreviewJob++;chosenCracks=[];secondPassDetails=[];scanConfirmed=false;scanSelectedPhoto=null;scanCandidateCanvas=null;scanOriginalPhoto=null;scanPreviewRefining=false;$('refineProgress').classList.remove('show');$('scanPreview').classList.remove('show');$('scanPreview').classList.remove('select-fullscreen','result-ready');scanPreviewOpen=false;scanPreviewImage=null;scanEstimatedPx=null;scanEstimatedMm=null;
  nearCheckBaseline=null;nearCheckCooldown=0;crackCandidate=null;crackStable=0;overlaySmoothCenter=null;
  resetScanCycle(area);clearDefectOverlay();disableLineTest();
