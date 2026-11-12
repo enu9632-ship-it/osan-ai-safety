@@ -793,15 +793,29 @@ function submitExpertRequest(){
  // A three-second observation must contain fresh video frames spread across the FULL interval.
  // Timer callbacks can be delayed by ONNX inference on iOS, so elapsed time alone is insufficient.
  let observationFrames=[],observationLastSample=0,observationFingerprint=null,observationStableChecks=0;
- let observationFirstAt=0,observationLastAt=0,observationLastVideoTime=-1,observationMotionHits=0;
- function resetObservationFrames(){observationFrames=[];observationLastSample=0;observationFingerprint=null;observationStableChecks=0;observationFirstAt=0;observationLastAt=0;observationLastVideoTime=-1;observationMotionHits=0;}
+ let observationFirstAt=0,observationLastAt=0,observationLastVideoTime=-1,observationMotionHits=0,observationAnchor=null;
+ function resetObservationFrames(){observationFrames=[];observationLastSample=0;observationFingerprint=null;observationStableChecks=0;observationFirstAt=0;observationLastAt=0;observationLastVideoTime=-1;observationMotionHits=0;observationAnchor=null;}
+ // Compare low-resolution luminance with a small alignment allowance for hand tremor.
+ function observationSceneDifference(a,b){
+   let best=Infinity;
+   for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
+     let sum=0,n=0;for(let y=2;y<22;y++)for(let x=2;x<30;x++){sum+=b[(y+dy)*32+x+dx]-a[y*32+x];n++;}
+     const offset=Math.max(-18,Math.min(18,sum/n));let error=0;
+     for(let y=2;y<22;y++)for(let x=2;x<30;x++)error+=Math.abs(b[(y+dy)*32+x+dx]-a[y*32+x]-offset);
+     best=Math.min(best,error/n);
+   }
+   return best;
+ }
  function observeStableScene(now){
    const v=$('video');if(!v||!v.videoWidth||v.readyState<2)return false;
    const current=nearCheckFingerprint();if(!current)return false;
-   if(observationFingerprint){
-     let difference=0;for(let i=0;i<current.length;i++)difference+=Math.abs(current[i]-observationFingerprint[i]);
-     difference/=current.length;
-     if(difference>23){observationMotionHits++;}else{observationMotionHits=0;}
+   if(!observationAnchor)observationAnchor=current;
+   const difference=observationSceneDifference(observationAnchor,current);
+   // Ignore minor motion; require two consecutive substantial changes.
+   if(difference>24)observationMotionHits++;else observationMotionHits=0;
+   if(observationMotionHits>=2){
+     resetObservationFrames();observationAnchor=current;observationFingerprint=current;
+     return 'restart';
    }
    observationFingerprint=current;observationStableChecks++;
    // Only accept a new frame after the video itself has advanced, at least 900ms later.
@@ -852,11 +866,15 @@ function submitExpertRequest(){
      scanCycleStart=now;scanCycleStepAt=now;scanCycleVoiceTick=3;scanCycleCrackStart=inspectCrackCount;checkpointScanCycle();resetObservationFrames();
      voiceSay('점검할 부위가 준비되었습니다. 3초간 화면을 고정해 주세요.','area');
    }
-   // Keep the original three-second observation countdown independent of motion checks.
-   // Collect video frames for the first precision analysis without restarting the timer.
-   observeStableScene(now);
+   const observationState=observeStableScene(now);
+   if(observationState==='restart'){
+     scanCycleStart=now;scanCycleStepAt=now;scanCycleVoiceTick=3;scanCycleCrackStart=inspectCrackCount;
+     scanCycleAnnounced=true;
+   }
+   // Hold the digit while a substantial change is being confirmed.
+   if(observationMotionHits===1)scanCycleStepAt=now;
    // Advance at most one displayed digit per update, even after a blocked UI thread.
-   if(scanCycleVoiceTick>0&&now-scanCycleStepAt>=1000){
+   if(scanCycleVoiceTick>0&&observationState!==false&&now-scanCycleStepAt>=1000){
      scanCycleVoiceTick--;scanCycleStepAt=now;
    }
    const seconds=scanCycleVoiceTick;
@@ -865,7 +883,8 @@ function submitExpertRequest(){
    if(label)label.textContent='AI가 '+area+areaParticle(area)+' 관찰 중';
    if(progress)progress.style.width=Math.min(100,((3-seconds)*1000+Math.min(1000,now-scanCycleStepAt))/3000*100)+'%';
    $('captionArea').textContent=area+' · '+(seconds>0?seconds+'초':'관찰 완료');
-   $('captionText').textContent=seconds>0?'같은 장면 관찰 중 · '+seconds+'초':'AI 분석 결과를 확인하고 있습니다…';
+   $('captionText').textContent=seconds>0?(scanCycleAnnounced?'화면이 크게 바뀌었습니다. 같은 장면을 비춰주세요. · '+seconds+'초':'같은 장면 관찰 중 · '+seconds+'초'):'AI 분석 결과를 확인하고 있습니다…';
+   if(seconds<3)scanCycleAnnounced=false;
    $('captionSub').textContent='같은 장면을 3초간 기록합니다. 이후 균열·박락·부식 의심 징후를 재분석합니다.';
    if(seconds===0){
      if(inspectCrackCount<=scanCycleCrackStart&&now-scanCycleStepAt<3500)return;
