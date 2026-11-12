@@ -208,7 +208,7 @@ body.scan-immersive #scan .caption-panel{bottom:calc(78px + env(safe-area-inset-
 const areaGuides={"벽체":"벽면의 균열 방향·길이·위치, 누수·백화, 마감재 들뜸을 확인하세요. 내력벽 여부는 영상만으로 판단할 수 없으며 구조도면 등의 확인이 필요합니다.","기둥·보":"기둥·보의 균열, 콘크리트 박락, 철근 노출, 변형 징후를 관찰하세요. 구조부재 손상이 의심되면 전문가 확인이 필요합니다.","계단실":"계단실 벽체 균열, 계단 디딤판 파손, 미끄럼 위험, 난간의 연속성과 고정 상태를 확인하세요. 계단실 벽이 모두 내력벽인 것은 아닙니다.","난간":"계단·복도·발코니의 난간 존재 여부, 파손, 흔들림, 틈새를 살펴보세요. 법적 설치 기준 충족 여부는 현장 치수와 용도에 따라 별도 검토가 필요합니다.","외벽":"외벽의 균열, 마감재 들뜸·탈락, 누수 흔적을 살펴보세요. 낙하 위험이 의심되면 아래쪽 접근을 피하세요.","옹벽":"옹벽 균열, 배부름·기울어짐, 배수구 막힘, 토사 유실을 확인하세요. 영상만으로 변위를 계측하거나 안전성을 판정할 수 없습니다.","바닥":"바닥의 균열·침하·단차·들뜸 등 이상 징후를 확인하세요. 위험이 의심되면 접근하지 말고 전문가에게 확인받으세요.","천장":"천장의 균열·누수·박락·처짐 등 이상 징후를 확인하세요. 낙하 위험이 의심되면 아래쪽 접근을 피하세요.","기타":"시설물의 위치와 손상 양상을 기록하세요. 보이지 않는 내부 결함은 사진만으로 확인할 수 없습니다."};
 let area='벽체',stream=null,photo=null,records=[],building={};
 const autoLastAt={};let defectClassHits={spall:0,rust:0};const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function go(id,skipCamera=false){document.body.classList.toggle('scan-immersive',id==='scan');document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.id===id));document.querySelectorAll('.nav button').forEach(e=>e.classList.toggle('on',e.id==='nav-'+(id==='scan'||id==='report'?'form':id)));window.scrollTo(0,0);if(id!=='scan'){if(typeof closeModelReadyGate==='function')closeModelReadyGate();stopLive(false);stopCamera()}if(id==='compare')renderCrackHistory();if(id==='scan'&&!skipCamera&&!stream){if(document.getElementById('report')?.dataset?.lastShown==='yes'){Object.keys(autoLastAt).forEach(k=>delete autoLastAt[k]);document.getElementById('report').dataset.lastShown='no';}setTimeout(()=>{if($('scan').classList.contains('active')&&!stream&&!preparing)openCamera()},100)}}
-let crackAnalysisFrame=null;let scanCycleStart=0,scanCycleCrackStart=0,scanCycleDone=false,scanCycleArea='';let scanCycleVoiceTick=0,scanCycleAnnounced=false,scanCycleFinishedAt=0;let areaAnnouncementUntil=0;function areaParticle(a){return ['벽체','외벽','옹벽','난간'].includes(a)?'를':'을'}function announceAreaChange(a){areaAnnouncementUntil=Date.now()+4500;const msg=a+areaParticle(a)+' 점검합니다.';if(liveEnabled)voiceSay(msg,'area');const el=$('captionText');if(el)el.textContent=msg;const sub=$('captionSub');if(sub)sub.textContent='점검 부위가 변경되었습니다.';const tag=$('captionArea');if(tag)tag.textContent=a+' · 점검 중';}function exitImmersiveScan(){go('recordsTab');}function renderAreas(){$('areas').innerHTML=Object.keys(areaGuides).map(a=>`<button class="checkbtn ${a===area?'selected':''}" onclick="selectArea('${a}')">${a}</button>`).join('');$('guide').textContent=areaGuides[area];$('areaTag').textContent=area;const sel=$('scanAreaSelect');if(sel)sel.value=area}function selectArea(a){const changed=area!==a;area=a;renderAreas();if(changed){resetScanCycle(a);announceAreaChange(a)}else guidePrompt()}renderAreas();
+let crackAnalysisFrame=null;let scanCycleStart=0,scanCycleCrackStart=0,scanCycleDone=false,scanCycleArea='';let scanCycleVoiceTick=0,scanCycleStepAt=0,scanCycleAnnounced=false,scanCycleFinishedAt=0;let areaAnnouncementUntil=0;function areaParticle(a){return ['벽체','외벽','옹벽','난간'].includes(a)?'를':'을'}function announceAreaChange(a){areaAnnouncementUntil=Date.now()+4500;const msg=a+areaParticle(a)+' 점검합니다.';if(liveEnabled)voiceSay(msg,'area');const el=$('captionText');if(el)el.textContent=msg;const sub=$('captionSub');if(sub)sub.textContent='점검 부위가 변경되었습니다.';const tag=$('captionArea');if(tag)tag.textContent=a+' · 점검 중';}function exitImmersiveScan(){go('recordsTab');}function renderAreas(){$('areas').innerHTML=Object.keys(areaGuides).map(a=>`<button class="checkbtn ${a===area?'selected':''}" onclick="selectArea('${a}')">${a}</button>`).join('');$('guide').textContent=areaGuides[area];$('areaTag').textContent=area;const sel=$('scanAreaSelect');if(sel)sel.value=area}function selectArea(a){const changed=area!==a;area=a;renderAreas();if(changed){resetScanCycle(a);announceAreaChange(a)}else guidePrompt()}renderAreas();
 function startInspection(){if(!$('buildingForm').reportValidity())return;building={name:$('bname').value.trim(),type:$('btype').value,year:$('byear').value,floors:$('bfloors').value,structure:$('bstructure').value,location:$('barea').value,note:$('bnote').value};records=[];Object.keys(autoLastAt).forEach(k=>delete autoLastAt[k]);defectClassHits={spall:0,rust:0};crackCandidate=null;crackStable=0;crackHits=0;aiObservations=[];aiAreaSeen=new Set();photo=null;$('photoPreview').classList.add('hidden');$('photoEmpty').classList.remove('hidden');renderRecords();$('scanBuilding').textContent=building.name+' · '+building.type+' · 관찰 부위를 선택하고 촬영하세요.';prepareInspection()}
 async function openCamera(){if(!orientationEnabled)enableOrientation();stopCamera();if(!navigator.mediaDevices?.getUserMedia){$('camfallback').innerHTML='<div class="big">🔒</div>카메라 API를 사용할 수 없습니다. HTTPS 주소와 Safari 권한을 확인하세요.';$('camfallback').classList.remove('hidden');return}try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});$('video').srcObject=stream;$('video').style.display='block';$('camfallback').classList.add('hidden');$('video').onloadedmetadata=()=>{if(stream&&!liveEnabled&&!$('modelReadyGate').classList.contains('show'))startLive()};$('video').play().catch(()=>{});if($('video').videoWidth&&!$('modelReadyGate').classList.contains('show'))startLive()}catch(e){window.lastCameraError=(e?.name||'Error')+': '+(e?.message||'');$('camfallback').innerHTML='<div class="big">📷</div>카메라 실행 실패: '+(e?.name||'알 수 없는 오류')+'<br>Safari 사이트 설정에서 카메라 권한을 확인해 주세요.<br><button onclick="prepareInspection()">카메라 다시 시도</button>';$('camfallback').classList.remove('hidden')}}function stopCamera(){disableLineTest();stopLive();sensorStableArea='';sensorCandidate='';sensorCandidateSince=0;gravityZ=null;lastSensorSignal=0;visualAreaCandidate='';visualAreaHits=0;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('video').srcObject=null;$('video').style.display='none';$('camfallback').classList.remove('hidden')}
 function setPhoto(data){photo=data;measureSetImage(data);$('photoPreview').src=data;$('photoPreview').classList.remove('hidden');$('photoEmpty').classList.add('hidden')}function downloadCurrentPhoto(){
@@ -820,7 +820,7 @@ function submitExpertRequest(){
  // Three seconds is an observation interval only; not proof of a complete inspection.
  function resetScanCycle(a){
    scanCycleArea=a;scanCycleStart=0;scanCycleCrackStart=inspectCrackCount;scanCycleDone=false;
-   scanCycleVoiceTick=0;scanCycleAnnounced=false;scanCycleFinishedAt=0;resetObservationFrames();
+   scanCycleVoiceTick=0;scanCycleStepAt=0;scanCycleAnnounced=false;scanCycleFinishedAt=0;resetObservationFrames();
    const panel=$('scanCountdown');if(panel)panel.classList.remove('visible');
  }
  function restartScanCycle(){
@@ -849,28 +849,26 @@ function submitExpertRequest(){
    }
    const now=performance.now();
    if(!scanCycleStart){
-     scanCycleStart=now;scanCycleCrackStart=inspectCrackCount;checkpointScanCycle();resetObservationFrames();
+     scanCycleStart=now;scanCycleStepAt=now;scanCycleVoiceTick=3;scanCycleCrackStart=inspectCrackCount;checkpointScanCycle();resetObservationFrames();
      voiceSay('점검할 부위가 준비되었습니다. 3초간 화면을 고정해 주세요.','area');
    }
    // Keep the original three-second observation countdown independent of motion checks.
    // Collect video frames for the first precision analysis without restarting the timer.
    observeStableScene(now);
-   const elapsed=now-scanCycleStart;
-   const seconds=Math.max(0,Math.ceil((3000-elapsed)/1000));
-   if(panel)panel.classList.add('visible');
-   if(num)num.textContent=String(seconds);
+   // Advance at most one displayed digit per update, even after a blocked UI thread.
+   if(scanCycleVoiceTick>0&&now-scanCycleStepAt>=1000){
+     scanCycleVoiceTick--;scanCycleStepAt=now;
+   }
+   const seconds=scanCycleVoiceTick;
+   if(panel)panel.classList.toggle('visible',seconds>0);
+   if(num&&seconds>0)num.textContent=String(seconds);
    if(label)label.textContent='AI가 '+area+areaParticle(area)+' 관찰 중';
-   if(progress)progress.style.width=Math.min(100,elapsed/3000*100)+'%';
-   $('captionArea').textContent=area+' · '+seconds+'초';
-   $('captionText').textContent='같은 장면 관찰 중 · '+seconds+'초';
+   if(progress)progress.style.width=Math.min(100,((3-seconds)*1000+Math.min(1000,now-scanCycleStepAt))/3000*100)+'%';
+   $('captionArea').textContent=area+' · '+(seconds>0?seconds+'초':'관찰 완료');
+   $('captionText').textContent=seconds>0?'같은 장면 관찰 중 · '+seconds+'초':'AI 분석 결과를 확인하고 있습니다…';
    $('captionSub').textContent='같은 장면을 3초간 기록합니다. 이후 균열·박락·부식 의심 징후를 재분석합니다.';
-   // Wait for at least one completed crack inference in the cycle, but cap the wait.
-   if(elapsed>=3000){
-     if(inspectCrackCount<=scanCycleCrackStart&&elapsed<6500){
-       if(label)label.textContent='분석 마무리 중';
-       $('captionText').textContent='AI 분석 결과를 확인하고 있습니다…';
-       return;
-     }
+   if(seconds===0){
+     if(inspectCrackCount<=scanCycleCrackStart&&now-scanCycleStepAt<3500)return;
      scanCycleDone=true;scanCycleFinishedAt=now;nearCheckBaseline=null;
      if(panel)panel.classList.remove('visible');
      const analyzed=inspectCrackCount>scanCycleCrackStart;
@@ -1166,12 +1164,12 @@ async function refineScanPreview(imageUrl,job,frames){
   let max=-Infinity,min=Infinity;
   for(let i=0;i<logits.length;i+=257){max=Math.max(max,logits[i]);min=Math.min(min,logits[i]);}
   const raw=max>1.05||min<-.05;
-  const threshold=raw?[2.35,1.65,1.05][sens]:[.91,.84,.75][sens];
+  const threshold=raw?[3.0,2.6,2.2][sens]:[.953,.931,.900][sens];
   const mask=new Uint8Array(side*side),seen=new Uint8Array(side*side),q=new Int32Array(side*side);
   for(let y=1;y<side-1;y++)for(let x=1;x<side-1;x++){
    const i=y*side+x;if(logits[i]<threshold)continue;
    let near=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(dx||dy)near+=logits[i+dy*side+dx]>=threshold?1:0;
-   if(near>=([2,1,1][sens]))mask[i]=1;
+   if(near>=2)mask[i]=1;
   }
   const result=new Uint8ClampedArray(side*side*4);
   for(let y=1;y<side-1;y++)for(let x=1;x<side-1;x++){
@@ -1185,7 +1183,13 @@ async function refineScanPreview(imageUrl,job,frames){
     }
    }
    const length=Math.max(maxx-minx+1,maxy-miny+1),thickness=tail/Math.max(1,length);
-   if(tail<([16,12,9][sens])||length<([20,15,12][sens])||thickness>Math.max(8,length*.32))continue;
+   if(tail<([48,36,28][sens])||length<([36,30,24][sens])||thickness>Math.max(8,length*.32))continue;
+   let confidenceSum=0,strongPixels=0;
+   const strongThreshold=raw?threshold+.45:Math.min(.99,threshold+.025);
+   for(let k=0;k<tail;k++){const score=logits[q[k]];confidenceSum+=score;if(score>=strongThreshold)strongPixels++;}
+   if(confidenceSum/tail<(raw?threshold+.25:threshold+.012)||strongPixels/tail<.30)continue;
+   // Weak, short hairline fragments are excluded; long high-confidence thin cracks remain eligible.
+   if(thickness<1.35&&length<([65,55,45][sens]))continue;
    // Geometric false-positive suppression. A closed rectangular outline with
    // long occupied sides is more likely to be an outlet/cover edge than a crack.
    // Conservative: do not suppress a lone straight crack or a tile grout line.
@@ -1202,6 +1206,7 @@ async function refineScanPreview(imageUrl,job,frames){
     const sides=[sideCounts[0]/bh,sideCounts[1]/bh,sideCounts[2]/bw,sideCounts[3]/bw];
     if(sides.filter(v=>v>.58).length>=3)continue;
    }
+   if(frameIndex!==replayFrames.length-1)continue;
    found++;
    // Component thickness in the 512px model tile. A rough width proxy,
    // NOT calibrated physical width. Ignore broad or degenerate components.
