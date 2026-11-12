@@ -870,7 +870,7 @@ function submitExpertRequest(){
    $('captionSub').textContent='같은 장면을 3초간 기록합니다. 이후 균열·박락·부식 의심 징후를 재분석합니다.';
    // Wait for at least one completed crack inference in the cycle, but cap the wait.
    if(elapsed>=3000){
-     // Require at least 5 seconds between FIRST and LAST actual captured video frames.
+     // Require at least 3 seconds between FIRST and LAST actual captured video frames.
      // This prevents a 1-second view from passing after a blocked/delayed timer.
      if(observationFrames.length<5||!observationFirstAt||observationLastAt-observationFirstAt<3000){
        if(label)label.textContent='동일 장면 3초 기록 확인 중';
@@ -1516,7 +1516,7 @@ function saveAndFinishScanPreview(){
 }
 function saveAndContinueScanPreview(){
  if(!scanPreviewOpen)return;
- if(scanPreviewRefining||!scanConfirmed||!secondPassDetails.length||!scanSelectedPhoto){alert('5초 관찰과 1·2차 정밀분석을 완료한 후 저장해 주세요.');return;}
+ if(scanPreviewRefining||!scanConfirmed||!secondPassDetails.length||!scanSelectedPhoto){alert('3초 관찰과 1·2차 정밀분석을 완료한 후 저장해 주세요.');return;}
  for(let i=records.length-1;i>=0;i--)if(!scanCycleRecordIds.has(records[i].id)&&records[i].source==='ai')records.splice(i,1);
  secondPassDetails.forEach((r,i)=>records.push({id:Date.now()+Math.random()+i,area,finding:'균열 의심',memo:'사용자 선택 후보 '+(i+1)+' · 2차 확대 분석 · AI 가정 폭 '+(r.mm===null?'추정 불가':r.mm.toFixed(2)+'mm')+' · 실측 필요',width:null,pixelWidth:r.pixelWidth,measurementStatus:'가정 추정 · 실측 아님',at:new Date().toISOString(),photo:scanSelectedPhoto,source:'manual',inspectionComplete:true,verified:false}));
  storeLocalScanFeedback("suspected_crack_saved");renderRecords();continueScanPreview();
