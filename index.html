@@ -820,7 +820,7 @@ function submitExpertRequest(){
    observationFingerprint=current;observationStableChecks++;
    // Only accept a new frame after the video itself has advanced, at least 900ms later.
    const videoTime=v.currentTime;
-   if(now-observationLastSample>=500&&videoTime>observationLastVideoTime+0.12){
+   if(now-observationLastSample>=300&&videoTime>observationLastVideoTime+0.12){
      const frame=scanPreviewCapture(false);
      if(frame){
        if(!observationFirstAt)observationFirstAt=now;
@@ -866,7 +866,7 @@ function submitExpertRequest(){
      scanCycleStart=now;scanCycleStepAt=now;scanCycleVoiceTick=3;scanCycleCrackStart=inspectCrackCount;checkpointScanCycle();resetObservationFrames();
      voiceSay('점검할 부위가 준비되었습니다. 3초간 화면을 고정해 주세요.','area');
    }
-   const observationState=observeStableScene(now);
+   const observationState=scanCycleVoiceTick>0?observeStableScene(now):true;
    if(observationState==='restart'){
      scanCycleStart=now;scanCycleStepAt=now;scanCycleVoiceTick=3;scanCycleCrackStart=inspectCrackCount;
      scanCycleAnnounced=true;
@@ -874,7 +874,8 @@ function submitExpertRequest(){
    // Hold the digit while a substantial change is being confirmed.
    if(observationMotionHits===1)scanCycleStepAt=now;
    // Advance at most one displayed digit per update, even after a blocked UI thread.
-   if(scanCycleVoiceTick>0&&observationState!==false&&now-scanCycleStepAt>=1000){
+   if(scanCycleVoiceTick>0&&observationState!==false&&now-scanCycleStepAt>=1000&&
+      (scanCycleVoiceTick!==1||(observationFrames.length>=3&&observationLastAt-observationFirstAt>=2000))){
      scanCycleVoiceTick--;scanCycleStepAt=now;
    }
    const seconds=scanCycleVoiceTick;
@@ -1133,6 +1134,24 @@ function analysisProgressWait(pass,start,end,stage){
 }
 function analysisProgressDone(pass){if(analysisProgressTimer!==null){clearInterval(analysisProgressTimer);analysisProgressTimer=null;}analysisProgressSet(pass,100,'분석 완료');setTimeout(()=>{const el=document.getElementById('analysisTopProgress');if(el&&el.classList.contains('show')&&document.getElementById('analysisTopPercent').textContent==='100%')el.classList.remove('show');},1700);}
 
+// Align recorded frames to the displayed reference using low-resolution luminance.
+function videoConsensusGray(canvas){
+ const c=document.createElement('canvas');c.width=96;c.height=72;
+ const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(canvas,0,0,96,72);
+ const rgba=ctx.getImageData(0,0,96,72).data,g=new Float32Array(96*72);
+ for(let i=0;i<g.length;i++)g[i]=.299*rgba[i*4]+.587*rgba[i*4+1]+.114*rgba[i*4+2];return g;
+}
+function videoConsensusAlign(ref,src){
+ let best=Infinity,bx=0,by=0;
+ for(let dy=-6;dy<=6;dy++)for(let dx=-6;dx<=6;dx++){
+  let sum=0,n=0;for(let y=8;y<64;y+=2)for(let x=8;x<88;x+=2){sum+=ref[y*96+x]-src[(y-dy)*96+x-dx];n++;}
+  const offset=Math.max(-20,Math.min(20,sum/n));let err=0;
+  for(let y=8;y<64;y+=2)for(let x=8;x<88;x+=2)err+=Math.abs(ref[y*96+x]-src[(y-dy)*96+x-dx]-offset);
+  const score=err/n+.06*(Math.abs(dx)+Math.abs(dy));if(score<best){best=score;bx=dx;by=dy;}
+ }
+ return best<=24?{dx:bx,dy:by}:null;
+}
+
 async function refineScanPreview(imageUrl,job,frames){
  if(!crackSession||!imageUrl)return false;
  analysisProgressWait(1,0,4,'AI 분석 준비 중');
@@ -1146,13 +1165,16 @@ async function refineScanPreview(imageUrl,job,frames){
  }
  if(crackBusy)throw new Error('실시간 AI 분석이 10초 이상 종료되지 않았습니다. 다시 점검을 눌러 주세요.');
  $('refineProgressLabel').textContent='1차 정밀분석 준비 완료 · 사진 분석 시작';
- const replayFrames=Array.isArray(frames)&&frames.length>=3?[frames[0],frames[Math.floor((frames.length-1)/2)],frames[frames.length-1]]:[imageUrl];
+ const replayFrames=Array.isArray(frames)?frames.slice():[];
+ if(replayFrames.length<3)throw new Error('관찰 영상 프레임이 부족합니다. 다시 점검해 주세요.');
+ const frameMasks=[];
  const im=new Image();im.src=imageUrl;await im.decode();
  if(job!==scanPreviewJob||!scanPreviewOpen)return false;
  const base=document.createElement('canvas');base.width=im.naturalWidth;base.height=im.naturalHeight;
  const bctx=base.getContext('2d');bctx.drawImage(im,0,0);
  const marks=document.createElement('canvas');marks.width=base.width;marks.height=base.height;
  const mctx=marks.getContext('2d');
+ const referenceGray=videoConsensusGray(base);
  const side=512,tiles=2,span=.58,mean=[.485,.456,.406],std=[.229,.224,.225];
  const {ort,session:onnx}=crackSession;
  const sens=Number($('crackSensitivity')?.value??1);
@@ -1161,6 +1183,9 @@ async function refineScanPreview(imageUrl,job,frames){
   const replayImage=new Image();replayImage.src=replayFrames[frameIndex];await replayImage.decode();
   const replayCanvas=document.createElement('canvas');replayCanvas.width=base.width;replayCanvas.height=base.height;
   replayCanvas.getContext('2d').drawImage(replayImage,0,0,base.width,base.height);
+  const alignment=videoConsensusAlign(referenceGray,videoConsensusGray(replayCanvas));
+  const frameMask=document.createElement('canvas');frameMask.width=base.width;frameMask.height=base.height;
+  const frameCtx=frameMask.getContext('2d');
  for(let ty=0;ty<tiles;ty++)for(let tx=0;tx<tiles;tx++){
   if(job!==scanPreviewJob||!scanPreviewOpen)return false;
   const region=ty*2+tx+1,totalRegions=replayFrames.length*4,completedRegions=frameIndex*4+region;analysisProgressWait(1,(completedRegions-1)*100/totalRegions,completedRegions*100/totalRegions,'3초 관찰 장면 '+(frameIndex+1)+'/'+replayFrames.length+' · '+region+'/4 구역');$('refineProgressLabel').textContent='1차 정밀분석 중 · 장면 '+(frameIndex+1)+'/'+replayFrames.length+' · '+region+'/4 구역';$('refineBarFill').style.width=((completedRegions-1)*100/totalRegions)+'%';
@@ -1225,7 +1250,6 @@ async function refineScanPreview(imageUrl,job,frames){
     const sides=[sideCounts[0]/bh,sideCounts[1]/bh,sideCounts[2]/bw,sideCounts[3]/bw];
     if(sides.filter(v=>v>.58).length>=3)continue;
    }
-   if(frameIndex!==replayFrames.length-1)continue;
    found++;
    // Component thickness in the 512px model tile. A rough width proxy,
    // NOT calibrated physical width. Ignore broad or degenerate components.
@@ -1234,9 +1258,29 @@ async function refineScanPreview(imageUrl,job,frames){
   }
   const painted=new ImageData(result,side,side);
   tctx.clearRect(0,0,side,side);tctx.putImageData(painted,0,0);
-  mctx.drawImage(tile,sx,sy,sw,sh);
+  frameCtx.drawImage(tile,sx,sy,sw,sh);
  }
+ if(alignment)frameMasks.push({canvas:frameMask,alignment});
  }
+ if(job!==scanPreviewJob||!scanPreviewOpen)return false;
+ if(frameMasks.length<3)throw new Error('영상 장면을 충분히 정렬하지 못했습니다. 같은 부위를 다시 점검해 주세요.');
+ // Each aligned frame gets one vote; nearby pixels tolerate small residual tremor.
+ const W=base.width,H=base.height,N=W*H,votes=new Uint8Array(N),exact=new Uint8Array(N);
+ const aligned=document.createElement('canvas');aligned.width=W;aligned.height=H;
+ const ac=aligned.getContext('2d',{willReadFrequently:true});
+ const radius=Math.max(2,Math.min(5,Math.round(W/250)));
+ for(const entry of frameMasks){
+  ac.clearRect(0,0,W,H);ac.drawImage(entry.canvas,entry.alignment.dx*W/96,entry.alignment.dy*H/72);
+  const rgba=ac.getImageData(0,0,W,H).data,near=new Uint8Array(N);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(rgba[i*4+3]<90)continue;exact[i]=1;
+   for(let yy=Math.max(0,y-radius);yy<=Math.min(H-1,y+radius);yy++)for(let xx=Math.max(0,x-radius);xx<=Math.min(W-1,x+radius);xx++)near[yy*W+xx]=1;
+  }
+  for(let i=0;i<N;i++)votes[i]+=near[i];
+ }
+ const consensus=mctx.createImageData(W,H),required=Math.max(2,Math.ceil(frameMasks.length*.6));found=0;
+ for(let i=0;i<N;i++)if(exact[i]&&votes[i]>=required){const j=i*4;consensus.data[j]=255;consensus.data[j+1]=67;consensus.data[j+2]=58;consensus.data[j+3]=210;found++;}
+ mctx.putImageData(consensus,0,0);
+ widths=[]; // first-pass consensus is not a calibrated width estimate; second pass remains unchanged.
  if(job!==scanPreviewJob||!scanPreviewOpen)return false;
  // Store independent raw photo and first-pass candidate mask for tap selection.
  scanOriginalPhoto=imageUrl;scanCandidateCanvas=marks;chosenCracks=[];secondPassDetails=[];scanConfirmed=false;scanSelectedPhoto=null;scanSelectedMask=null;
@@ -1264,7 +1308,7 @@ async function refineScanPreview(imageUrl,job,frames){
  $('scanWidthEstimate').style.display='none';
  $('scanSelectionStatus').textContent=found?'① 사진의 빨간 선 터치 → ② 청록색 강조·번호 확인 → ③ 여러 개 선택 후 아래 2차 정밀분석 버튼 누르기.':'탐지된 균열 후보가 없습니다. 다시 점검해 주세요.';
  analysisProgressDone(1);scanPreviewRefining=false;$('refineProgressLabel').textContent='1차 정밀분석 완료';$('refineBarFill').style.width='100%';
- $('scanPreviewDesc').textContent=found?'1차 정밀분석 완료. 빨간색 의심 영역을 직접 터치해 확인하면 해당 위치를 확대 재분석합니다. 콘센트·전선 등 오탐은 여전히 가능합니다.':'뚜렷한 균열 후보가 없습니다. 균열이 없다는 뜻은 아니며 재점검을 권장합니다.';
+ $('scanPreviewDesc').textContent=found?'1차 영상 종합분석 완료. 여러 프레임에서 반복 탐지된 빨간색 의심 영역을 터치하면 해당 위치를 확대 재분석합니다. 콘센트·전선 등 오탐은 여전히 가능합니다.':'뚜렷한 균열 후보가 없습니다. 균열이 없다는 뜻은 아니며 재점검을 권장합니다.';
  return true;
 }
 function showScanPreview(analyzed){
@@ -1279,7 +1323,7 @@ function showScanPreview(analyzed){
  $('scanPreviewPhoto').src=scanPreviewImage||'';
  scanEstimatedPx=null;scanEstimatedMm=null;$('scanWidthEstimate').style.display='none';
  $('scanPreviewTitle').firstChild.textContent=analyzed?'3초 관찰 결과 ':'3초 관찰 완료 · AI 분석 미확인 ';
- $('scanPreviewDesc').textContent=crackSession?'3초 동안 저장한 동일 장면의 여러 시점을 AI가 다시 분석하고 있습니다…':'AI 모델이 준비되지 않아 정밀 재분석을 진행하지 못했습니다. 재점검을 권장합니다.';
+ $('scanPreviewDesc').textContent=crackSession?'3초 동안 수집한 영상 프레임 전체를 AI가 분석하고 반복적으로 탐지된 균열을 확인하고 있습니다…':'AI 모델이 준비되지 않아 정밀 재분석을 진행하지 못했습니다. 재점검을 권장합니다.';
  $('scanPreview').classList.add('show');$('scanPreview').classList.add('select-fullscreen');updateChosenCracks();requestAnimationFrame(syncScanTouchLayer);
  if(crackSession&&scanPreviewImage){refineScanPreview(scanPreviewImage,job,capturedFrames).catch(e=>{
   analysisProgressStop();scanPreviewRefining=false;console.error('1차 정밀분석 실패',e);
