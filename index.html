@@ -1693,12 +1693,12 @@ el('fireImport').addEventListener('change',async e=>{let a=read(),n=0,bad=0;for(
 #fireAiModal{position:fixed;inset:0;z-index:2147483200;background:#071523f5;color:white;display:none;flex-direction:column;padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom)}
 #fireAiModal.open{display:flex}#fireAiModal header{padding:12px 5px;display:flex;justify-content:space-between;gap:12px;align-items:center}#fireAiModal h2{font-size:18px;margin:0}#fireAiModal button{border:0;border-radius:10px;padding:12px;font-weight:800;cursor:pointer}#fireAiClose{background:#e34b4b;color:#fff}#fireAiView{position:relative;flex:1;min-height:180px;overflow:hidden;background:#000;border-radius:14px}#fireAiVideo{width:100%;height:100%;object-fit:cover}#fireAiFrame{position:absolute;inset:16%;border:3px dashed #66d9ff;border-radius:14px;pointer-events:none}#fireAiMessage{font-size:16px;font-weight:750;line-height:1.5;background:#123452;padding:13px;margin:10px 0;border-radius:12px}#fireAiButtons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#fireAiButtons button{background:#1b6dd3;color:white}#fireAiButtons .secondary{background:#29425d}#fireAiResult{font-size:13px;color:#d6e8fa;margin:8px 0;line-height:1.5}#fireAiStill{display:none;max-height:120px;max-width:100%;object-fit:contain;margin:4px auto}
 </style>
-<section id="fireAiModal" role="dialog" aria-modal="true" aria-label="소방점검 카메라 안내"><header><h2 id="fireAiTitle">AI 카메라 점검</h2><button id="fireAiClose" type="button">닫기</button></header><div id="fireAiView"><video id="fireAiVideo" autoplay playsinline muted></video><div id="fireAiFrame"></div></div><div id="fireAiMessage" aria-live="polite">카메라를 준비하고 있습니다.</div><img id="fireAiStill" alt="촬영한 점검 사진"><div id="fireAiResult">사진을 촬영하면 이미지 인식 AI가 외관을 분석하고 근거를 음성으로 안내합니다. 불확실하면 재촬영을 요청합니다.</div><div id="fireAiButtons"><button type="button" id="fireAiCheck">촬영 상태 확인</button><button type="button" id="fireAiSnap">사진 촬영</button><button type="button" id="fireAiSpeak" class="secondary">음성 다시 듣기</button><button type="button" id="fireAiRetry" class="secondary">카메라 다시 연결</button><label id="fireAiPhotoFallback" style="display:block;background:#245e9c;color:white;padding:12px;border-radius:10px;text-align:center;cursor:pointer">카메라가 안 되면 사진 촬영·선택<input id="fireAiFile" type="file" accept="image/*" capture="environment" style="display:none"></label><button type="button" id="fireAiAnalyze" style="background:#1663d2">AI 사진 분석 시작</button><button type="button" id="fireAiRetake" class="secondary">다시 촬영</button><button type="button" id="fireAiGood" style="background:#15825c">분석 결과 확인: 정상</button><button type="button" id="fireAiBad" style="background:#b74747">분석 결과 확인: 불량</button></div><p style="font-size:12px;line-height:1.5;color:#b9cee2">※ 실험적 이미지 AI: 외관에 대한 참고 의견만 제공합니다. 소방설비의 기능·안전성을 인증하지 않으며, 확실하지 않으면 판단불가로 안내합니다. 모델은 최초 사용 시 인터넷에서 내려받고, 사진은 브라우저 안에서 처리합니다.</p></section>
+<section id="fireAiModal" role="dialog" aria-modal="true" aria-label="소방점검 카메라 안내"><header><h2 id="fireAiTitle">AI 카메라 점검</h2><button id="fireAiClose" type="button">닫기</button></header><div id="fireAiView"><video id="fireAiVideo" autoplay playsinline muted></video><div id="fireAiFrame"></div></div><div id="fireAiMessage" aria-live="polite">카메라를 준비하고 있습니다.</div><img id="fireAiStill" alt="촬영한 점검 사진" title="사진에서 확인할 설비 부분을 터치하세요"><div id="fireAiRegionHint" style="color:#b8e7ff;font-size:13px;margin:6px 0">멀리서 찍었다면 사진에서 확인할 설비 부분을 터치하면 해당 부분을 확대 분석합니다.</div><div id="fireAiResult">사진을 촬영하면 이미지 인식 AI가 외관을 분석하고 근거를 음성으로 안내합니다. 불확실하면 재촬영을 요청합니다.</div><div id="fireAiButtons"><button type="button" id="fireAiCheck">촬영 상태 확인</button><button type="button" id="fireAiSnap">사진 촬영</button><button type="button" id="fireAiSpeak" class="secondary">음성 다시 듣기</button><button type="button" id="fireAiRetry" class="secondary">카메라 다시 연결</button><label id="fireAiPhotoFallback" style="display:block;background:#245e9c;color:white;padding:12px;border-radius:10px;text-align:center;cursor:pointer">카메라가 안 되면 사진 촬영·선택<input id="fireAiFile" type="file" accept="image/*" capture="environment" style="display:none"></label><button type="button" id="fireAiAnalyze" style="background:#1663d2">AI 사진 분석 시작</button><button type="button" id="fireAiRetake" class="secondary">다시 촬영</button><button type="button" id="fireAiGood" style="background:#15825c">분석 결과 확인: 정상</button><button type="button" id="fireAiBad" style="background:#b74747">분석 결과 확인: 불량</button></div><p style="font-size:12px;line-height:1.5;color:#b9cee2">※ 확대 분석은 원본 사진에 실제로 찍힌 세부 정보만 활용하며, 없는 정보를 복원하지 못합니다. 일반 CLIP 모델은 소방설비 정상·불량 판정용으로 검증되지 않았습니다. 실험적 이미지 AI: 외관에 대한 참고 의견만 제공합니다. 소방설비의 기능·안전성을 인증하지 않으며, 확실하지 않으면 판단불가로 안내합니다. 모델은 최초 사용 시 인터넷에서 내려받고, 사진은 브라우저 안에서 처리합니다.</p></section>
 <script>
 (()=>{
 'use strict';
 const modal=document.getElementById('fireAiModal'), video=document.getElementById('fireAiVideo'), msg=document.getElementById('fireAiMessage');
-let stream=null,idx=-1,latestPhoto=null,qualityTimer=null,lastSpoken='',lastAssessment=null,modelPromise=null,session=0;
+let stream=null,idx=-1,latestPhoto=null,qualityTimer=null,lastSpoken='',lastAssessment=null,modelPromise=null,session=0,focusPoint=null;
 const guidance=[
 '소화기가 물건에 가려지지 않았는지, 바로 꺼낼 수 있는 위치인지 보여주세요.',
 '소화기 용기의 앞면과 바닥, 손잡이, 호스를 가까이 비춰 찌그러짐과 녹, 파손을 확인하세요.',
@@ -1745,6 +1745,30 @@ async function compactVisionPhoto(src){
   };img.onerror=reject;img.src=src;
  });
 }
+// Crop from the ORIGINAL photograph, retaining details that a 640px full-image resize loses.
+async function detailCrop(src,point){
+ return new Promise((resolve,reject)=>{
+  const im=new Image();
+  im.onload=()=>{
+   const w=im.naturalWidth,h=im.naturalHeight;
+   const cw=Math.min(w,Math.round(w*.42)),ch=Math.min(h,Math.round(h*.42));
+   const px=point?point.x:.5,py=point?point.y:.5;
+   const sx=Math.max(0,Math.min(w-cw,Math.round(px*w-cw/2)));
+   const sy=Math.max(0,Math.min(h-ch,Math.round(py*h-ch/2)));
+   const c=document.createElement('canvas');c.width=Math.min(768,cw);c.height=Math.max(1,Math.round(ch*c.width/cw));
+   c.getContext('2d',{alpha:false}).drawImage(im,sx,sy,cw,ch,0,0,c.width,c.height);
+   resolve(c.toDataURL('image/jpeg',.9));
+  };
+  im.onerror=reject;im.src=src;
+ });
+}
+const fireStill=document.getElementById('fireAiStill');
+fireStill.addEventListener('click',event=>{
+ if(!latestPhoto)return;
+ const r=fireStill.getBoundingClientRect();
+ focusPoint={x:Math.max(0,Math.min(1,(event.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(event.clientY-r.top)/r.height))};
+ document.getElementById('fireAiRegionHint').textContent='선택한 부분을 원본 사진에서 확대 분석합니다. 「AI 사진 분석 시작」을 눌러주세요.';
+});
 async function analyze(){
  const requestSession=session,caseInfo=visionCases[idx];
  if(!latestPhoto){say('사진을 먼저 촬영하거나 선택해 주세요.');return}
@@ -1757,7 +1781,23 @@ async function analyze(){
   msg.textContent='사진을 최적화하여 분석하고 있습니다…';
   const compactPhoto=await compactVisionPhoto(latestPhoto);if(requestSession!==session)return;
   const result=await model(compactPhoto,labels,{hypothesis_template:'This is a photo of {}.'});if(requestSession!==session)return;
-  const scores=Object.fromEntries(result.map(x=>[x.label,x.score]));const good=scores[caseInfo.good]||0,bad=scores[caseInfo.bad]||0,other=scores[labels[2]]||0;
+  let scores=Object.fromEntries(result.map(x=>[x.label,x.score]));
+  // For distant photos, use an original-resolution region, rather than magnifying already-downscaled pixels.
+  // A crop selected by the user is preferred. A center crop is only a fallback for an uncertain whole-image result.
+  const wholeGood=scores[caseInfo.good]||0,wholeBad=scores[caseInfo.bad]||0,wholeOther=scores[labels[2]]||0;
+  if(focusPoint || wholeOther>.18 || Math.max(wholeGood,wholeBad)<.82 || Math.abs(wholeGood-wholeBad)<.65){
+   msg.textContent='원본 사진의 세부 영역을 추가로 분석하고 있습니다…';
+   const crop=await detailCrop(latestPhoto,focusPoint);
+   const fine=await model(crop,labels,{hypothesis_template:'This is a photo of {}.'});
+   if(requestSession!==session)return;
+   const fineScores=Object.fromEntries(fine.map(x=>[x.label,x.score]));
+   // When whole-image and crop disagree, do not claim a reliable normal result.
+   if(!focusPoint && (wholeGood>wholeBad)!==((fineScores[caseInfo.good]||0)>(fineScores[caseInfo.bad]||0))){
+    showAssessment('판단불가','전체 사진과 확대 영역의 분석 의견이 일치하지 않습니다. 사진에서 점검할 부분을 터치한 뒤 다시 분석하거나 '+caseInfo.detail);return;
+   }
+   scores=fineScores;
+  }
+  const good=scores[caseInfo.good]||0,bad=scores[caseInfo.bad]||0,other=scores[labels[2]]||0;
   if(other>.18||Math.max(good,bad)<.82||Math.abs(good-bad)<.65){showAssessment('판단불가','사진만으로 '+caseInfo.part+'의 상태를 신뢰할 수준으로 구분하지 못했습니다. '+caseInfo.detail+' 사진을 다시 촬영해 주세요.');return}
   if(bad>good){showAssessment('불량 의심',caseInfo.part+'에서 손상 또는 이상으로 보이는 특징이 감지되었습니다. 다만 일반 이미지 분류 모델의 참고 의견이므로 실제 상태를 직접 확인하고 관리주체의 점검을 받으세요.');return}
   showAssessment('정상 추정',caseInfo.part+'에서 뚜렷한 외관 이상은 인식되지 않았습니다. 사진에 보이는 범위의 참고 의견이며 실제 기능이나 안전성을 보증하지 않습니다.');
@@ -1807,11 +1847,11 @@ async function camera(){
  qualityTimer=setInterval(()=>{if(!modal.classList.contains('open')||!video.videoWidth)return;try{const q=checkQuality(false);if(q?.problem)msg.textContent=q.problem}catch(e){}},3500);
 }
 function checkQuality(speak=true){if(!video.videoWidth)return null;let c=document.createElement('canvas');c.width=192;c.height=108;let ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(video,0,0,192,108);let data=ctx.getImageData(0,0,192,108).data,sum=0,edges=0,prev=0;for(let y=0;y<108;y++)for(let x=0;x<192;x++){let k=(y*192+x)*4,v=(data[k]*.299+data[k+1]*.587+data[k+2]*.114);sum+=v;if(x>0)edges+=Math.abs(v-prev);prev=v}let mean=sum/(192*108),sharp=edges/(191*108);let problem=mean<55?'화면이 너무 어둡습니다. 조명을 켜고 다시 비춰주세요.':mean>225?'빛이 너무 강합니다. 반사가 없도록 각도를 바꿔주세요.':sharp<9?'화면이 흐릿합니다. 휴대폰을 고정하고 확인 부위를 더 가까이 비춰주세요.':'';let t=problem||'촬영 밝기와 선명도가 양호합니다. '+guidance[idx]+' 단, 정상 여부는 직접 확인해야 합니다.';if(speak)say(t);return {problem,mean,sharp}}
-function open(i){session++;idx=i;if(i!==4){loadVision().catch(()=>{});} latestPhoto=null;lastAssessment=null;document.getElementById('fireAiGood').hidden=true;document.getElementById('fireAiBad').hidden=true;document.getElementById('fireAiStill').style.display='none';const art=document.querySelectorAll('#fireItems .fire-item')[i];document.getElementById('fireAiTitle').textContent=`${i+1}번 · ${art?.querySelector('h3')?.textContent?.trim()||'소방시설'} 카메라 점검`;modal.classList.add('open');document.body.style.overflow='hidden';camera()}
+function open(i){session++;idx=i;focusPoint=null;if(i!==4){loadVision().catch(()=>{});} latestPhoto=null;lastAssessment=null;document.getElementById('fireAiGood').hidden=true;document.getElementById('fireAiBad').hidden=true;document.getElementById('fireAiStill').style.display='none';const art=document.querySelectorAll('#fireItems .fire-item')[i];document.getElementById('fireAiTitle').textContent=`${i+1}번 · ${art?.querySelector('h3')?.textContent?.trim()||'소방시설'} 카메라 점검`;modal.classList.add('open');document.body.style.overflow='hidden';camera()}
 function close(){session++;stop();modal.classList.remove('open');document.body.style.overflow=''}
 function choose(v){if((v==='정상'&&lastAssessment!=='정상 추정')||(v==='불량'&&lastAssessment!=='불량 의심'))return;const radio=document.querySelector(`input[name="fireQ${idx}"][value="${v}"]`);if(radio){radio.checked=true;radio.dispatchEvent(new Event('change',{bubbles:true}))}close()}
 document.getElementById('fireItems').addEventListener('click',e=>{const label=e.target.closest('.fire-ai-option');if(!label)return;const article=label.closest('.fire-item');const i=Array.from(document.querySelectorAll('#fireItems .fire-item')).indexOf(article);if(i<0)return;e.preventDefault();e.stopPropagation();open(i)},true);
-document.getElementById('fireAiClose').onclick=close;document.getElementById('fireAiCheck').onclick=()=>checkQuality(true);document.getElementById('fireAiSpeak').onclick=()=>say(guidance[idx]);document.getElementById('fireAiRetry').onclick=camera;document.getElementById('fireAiAnalyze').onclick=analyze;document.getElementById('fireAiRetake').onclick=()=>{latestPhoto=null;lastAssessment=null;document.getElementById('fireAiGood').hidden=true;document.getElementById('fireAiBad').hidden=true;document.getElementById('fireAiStill').style.display='none';say(guidance[idx]);};
+document.getElementById('fireAiClose').onclick=close;document.getElementById('fireAiCheck').onclick=()=>checkQuality(true);document.getElementById('fireAiSpeak').onclick=()=>say(guidance[idx]);document.getElementById('fireAiRetry').onclick=camera;document.getElementById('fireAiAnalyze').onclick=analyze;document.getElementById('fireAiRetake').onclick=()=>{focusPoint=null;latestPhoto=null;lastAssessment=null;document.getElementById('fireAiGood').hidden=true;document.getElementById('fireAiBad').hidden=true;document.getElementById('fireAiStill').style.display='none';say(guidance[idx]);};
 document.getElementById('fireAiSnap').onclick=()=>{if(!video.videoWidth){say('카메라 연결을 먼저 확인해주세요.');return}checkQuality(true);const c=document.createElement('canvas');c.width=Math.min(video.videoWidth,1280);c.height=Math.round(c.width*video.videoHeight/video.videoWidth);c.getContext('2d').drawImage(video,0,0,c.width,c.height);latestPhoto=c.toDataURL('image/jpeg',.8);lastAssessment=null;document.getElementById('fireAiGood').hidden=true;document.getElementById('fireAiBad').hidden=true;const im=document.getElementById('fireAiStill');im.src=latestPhoto;im.style.display='block';document.getElementById('fireAiResult').textContent='사진을 촬영했습니다. 이 사진은 점검 결과로 자동 전송되거나 저장되지 않습니다. AI 사진 분석 시작 버튼을 눌러 외관 분석을 진행하세요.'};
 document.getElementById('fireAiFile').addEventListener('change',e=>{
  const file=e.target.files?.[0];if(!file)return;
