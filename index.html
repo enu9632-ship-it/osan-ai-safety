@@ -1733,6 +1733,18 @@ const visionCases=[
 ];
 function showAssessment(kind,explanation){lastAssessment=kind;document.getElementById('fireAiResult').textContent='AI 분석 의견: '+kind+' — '+explanation;document.getElementById('fireAiGood').hidden=kind!=='정상 추정';document.getElementById('fireAiBad').hidden=kind!=='불량 의심';say(kind+'. '+explanation)}
 async function loadVision(){if(!modelPromise){modelPromise=(async()=>{const m=await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');m.env.allowLocalModels=false;return await m.pipeline('zero-shot-image-classification','Xenova/clip-vit-base-patch32',{quantized:true})})().catch(e=>{modelPromise=null;throw e})}return modelPromise}
+// Reduce oversized phone images before running the on-device model.
+async function compactVisionPhoto(src){
+ return await new Promise((resolve,reject)=>{
+  const img=new Image();img.onload=()=>{
+   const maxEdge=640,scale=Math.min(1,maxEdge/Math.max(img.naturalWidth,img.naturalHeight));
+   if(scale===1){resolve(src);return}
+   const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+   canvas.getContext('2d',{alpha:false}).drawImage(img,0,0,canvas.width,canvas.height);
+   resolve(canvas.toDataURL('image/jpeg',0.82));
+  };img.onerror=reject;img.src=src;
+ });
+}
 async function analyze(){
  const requestSession=session,caseInfo=visionCases[idx];
  if(!latestPhoto){say('사진을 먼저 촬영하거나 선택해 주세요.');return}
@@ -1742,7 +1754,9 @@ async function analyze(){
   msg.textContent='이미지 인식 모델을 준비하고 있습니다. 처음에는 다운로드로 시간이 걸릴 수 있습니다.';
   const model=await loadVision();if(requestSession!==session)return;
   const labels=[caseInfo.good,caseInfo.bad,'an unrelated blurry photo without a visible fire safety device'];
-  const result=await model(latestPhoto,labels,{hypothesis_template:'This is a photo of {}.'});if(requestSession!==session)return;
+  msg.textContent='사진을 최적화하여 분석하고 있습니다…';
+  const compactPhoto=await compactVisionPhoto(latestPhoto);if(requestSession!==session)return;
+  const result=await model(compactPhoto,labels,{hypothesis_template:'This is a photo of {}.'});if(requestSession!==session)return;
   const scores=Object.fromEntries(result.map(x=>[x.label,x.score]));const good=scores[caseInfo.good]||0,bad=scores[caseInfo.bad]||0,other=scores[labels[2]]||0;
   if(other>.18||Math.max(good,bad)<.82||Math.abs(good-bad)<.65){showAssessment('판단불가','사진만으로 '+caseInfo.part+'의 상태를 신뢰할 수준으로 구분하지 못했습니다. '+caseInfo.detail+' 사진을 다시 촬영해 주세요.');return}
   if(bad>good){showAssessment('불량 의심',caseInfo.part+'에서 손상 또는 이상으로 보이는 특징이 감지되었습니다. 다만 일반 이미지 분류 모델의 참고 의견이므로 실제 상태를 직접 확인하고 관리주체의 점검을 받으세요.');return}
@@ -1793,7 +1807,7 @@ async function camera(){
  qualityTimer=setInterval(()=>{if(!modal.classList.contains('open')||!video.videoWidth)return;try{const q=checkQuality(false);if(q?.problem)msg.textContent=q.problem}catch(e){}},3500);
 }
 function checkQuality(speak=true){if(!video.videoWidth)return null;let c=document.createElement('canvas');c.width=192;c.height=108;let ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(video,0,0,192,108);let data=ctx.getImageData(0,0,192,108).data,sum=0,edges=0,prev=0;for(let y=0;y<108;y++)for(let x=0;x<192;x++){let k=(y*192+x)*4,v=(data[k]*.299+data[k+1]*.587+data[k+2]*.114);sum+=v;if(x>0)edges+=Math.abs(v-prev);prev=v}let mean=sum/(192*108),sharp=edges/(191*108);let problem=mean<55?'화면이 너무 어둡습니다. 조명을 켜고 다시 비춰주세요.':mean>225?'빛이 너무 강합니다. 반사가 없도록 각도를 바꿔주세요.':sharp<9?'화면이 흐릿합니다. 휴대폰을 고정하고 확인 부위를 더 가까이 비춰주세요.':'';let t=problem||'촬영 밝기와 선명도가 양호합니다. '+guidance[idx]+' 단, 정상 여부는 직접 확인해야 합니다.';if(speak)say(t);return {problem,mean,sharp}}
-function open(i){session++;idx=i;latestPhoto=null;lastAssessment=null;document.getElementById('fireAiGood').hidden=true;document.getElementById('fireAiBad').hidden=true;document.getElementById('fireAiStill').style.display='none';const art=document.querySelectorAll('#fireItems .fire-item')[i];document.getElementById('fireAiTitle').textContent=`${i+1}번 · ${art?.querySelector('h3')?.textContent?.trim()||'소방시설'} 카메라 점검`;modal.classList.add('open');document.body.style.overflow='hidden';camera()}
+function open(i){session++;idx=i;if(i!==4){loadVision().catch(()=>{});} latestPhoto=null;lastAssessment=null;document.getElementById('fireAiGood').hidden=true;document.getElementById('fireAiBad').hidden=true;document.getElementById('fireAiStill').style.display='none';const art=document.querySelectorAll('#fireItems .fire-item')[i];document.getElementById('fireAiTitle').textContent=`${i+1}번 · ${art?.querySelector('h3')?.textContent?.trim()||'소방시설'} 카메라 점검`;modal.classList.add('open');document.body.style.overflow='hidden';camera()}
 function close(){session++;stop();modal.classList.remove('open');document.body.style.overflow=''}
 function choose(v){if((v==='정상'&&lastAssessment!=='정상 추정')||(v==='불량'&&lastAssessment!=='불량 의심'))return;const radio=document.querySelector(`input[name="fireQ${idx}"][value="${v}"]`);if(radio){radio.checked=true;radio.dispatchEvent(new Event('change',{bubbles:true}))}close()}
 document.getElementById('fireItems').addEventListener('click',e=>{const label=e.target.closest('.fire-ai-option');if(!label)return;const article=label.closest('.fire-item');const i=Array.from(document.querySelectorAll('#fireItems .fire-item')).indexOf(article);if(i<0)return;e.preventDefault();e.stopPropagation();open(i)},true);
