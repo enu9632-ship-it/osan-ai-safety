@@ -1908,4 +1908,54 @@ document.getElementById('fireAiFile').addEventListener('change',e=>{
 });
 document.getElementById('fireAiGood').onclick=()=>choose('정상');document.getElementById('fireAiBad').onclick=()=>choose('불량');window.addEventListener('pagehide',stop);
 })();
-</script></body></html>
+</script>
+<style id="fire-camera-navigation-fix">
+/* Mobile camera controls must never fall outside an unscrollable fullscreen dialog. */
+#fireAiModal.open{overflow-y:auto!important;overscroll-behavior:contain;min-height:0;max-height:100dvh;padding-bottom:max(12px,env(safe-area-inset-bottom))!important}
+#fireAiModal header{position:sticky;top:0;z-index:5;background:#071523;padding:9px 4px!important;flex-shrink:0}
+#fireAiView{width:min(100%,38dvh,360px)!important;max-height:34dvh!important;min-height:130px!important;aspect-ratio:4/3!important;flex-shrink:0!important}
+#fireAiMessage{font-size:14px!important;padding:9px 11px!important;margin:7px 0!important;flex-shrink:0}
+#fireAiRegionHint,#fireAiResult{font-size:12px!important;line-height:1.45!important;margin:5px 0!important;flex-shrink:0}
+#fireAiStill{width:min(100%,24dvh)!important;max-height:20dvh!important;aspect-ratio:4/3!important;flex-shrink:0}
+#fireAiButtons{position:sticky;bottom:0;z-index:10;flex-shrink:0;background:#10263e!important;border:1px solid #446482;border-radius:12px;padding:8px;box-shadow:0 -7px 22px #0009;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+#fireAiButtons button,#fireAiPhotoFallback{font-size:13px!important;padding:10px 5px!important;min-height:42px;line-height:1.2;white-space:normal}
+#fireAiSnap{background:#00a58b!important;color:white!important;font-weight:900!important}
+#fireAiAnalyze{background:#1663d2!important;font-weight:900!important}
+#fireAiRetake{background:#f4d58b!important;color:#33250d!important;font-weight:900!important}
+#fireAiButtons button[hidden]{display:none!important}
+@media(max-height:720px){#fireAiView{max-height:26dvh!important;min-height:100px!important}#fireAiStill{max-height:13dvh!important}#fireAiButtons button,#fireAiPhotoFallback{min-height:36px;padding:7px 4px!important}}
+</style>
+<script id="fire-camera-navigation-script">
+(()=>{
+ const modal=document.getElementById('fireAiModal');
+ const snap=document.getElementById('fireAiSnap');
+ const retake=document.getElementById('fireAiRetake');
+ const analyze=document.getElementById('fireAiAnalyze');
+ const file=document.getElementById('fireAiFile');
+ const result=document.getElementById('fireAiResult');
+ const message=document.getElementById('fireAiMessage');
+ const still=document.getElementById('fireAiStill');
+ const buttons=document.getElementById('fireAiButtons');
+ if(!modal||!snap||!retake||!analyze||!buttons)return;
+ const guide=document.createElement('div');guide.id='fireAiNextStep';guide.setAttribute('role','status');
+ guide.style.cssText='background:#fff4cb;color:#493713;border-radius:9px;padding:9px 11px;font-size:13px;font-weight:800;line-height:1.5;display:none;flex-shrink:0';
+ buttons.before(guide);
+ const refresh=()=>{
+  const hasPhoto=!!still.src && still.style.display!=='none';
+  guide.style.display=hasPhoto?'block':'none';
+  guide.textContent=hasPhoto?'📸 촬영 완료! 아래 「AI 사진 분석 시작」을 누르세요. 다시 찍으려면 「다시 촬영」을 누르세요.':'';
+  analyze.style.outline=hasPhoto?'3px solid #85d8ff':'';
+  retake.style.outline=hasPhoto?'2px solid #fff':'';
+ };
+ const scrollControls=()=>{refresh();if(modal.classList.contains('open'))buttons.scrollIntoView({block:'end',behavior:'smooth'});};
+ snap.addEventListener('click',()=>setTimeout(scrollControls,80));
+ file?.addEventListener('change',()=>setTimeout(scrollControls,450));
+ retake.addEventListener('click',()=>{guide.style.display='none';result.textContent='카메라 화면에서 다시 촬영할 수 있습니다. 아래 초록색 「사진 촬영」 버튼을 누르세요.';setTimeout(()=>snap.scrollIntoView({block:'nearest',behavior:'smooth'}),30);});
+ analyze.addEventListener('click',()=>{guide.style.display='none';setTimeout(()=>buttons.scrollIntoView({block:'end',behavior:'smooth'}),30);});
+ const observer=new MutationObserver(()=>{if(modal.classList.contains('open'))refresh();});
+ observer.observe(still,{attributes:true,attributeFilter:['style','src']});
+ const opened=new MutationObserver(()=>{if(modal.classList.contains('open')){setTimeout(()=>{refresh();snap.scrollIntoView({block:'nearest'});},250)}else{guide.style.display='none'}});
+ opened.observe(modal,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+</body></html>
