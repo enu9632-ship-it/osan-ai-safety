@@ -1693,7 +1693,7 @@ el('fireImport').addEventListener('change',async e=>{let a=read(),n=0,bad=0;for(
 #fireAiModal{position:fixed;inset:0;z-index:2147483200;background:#071523f5;color:white;display:none;flex-direction:column;padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom)}
 #fireAiModal.open{display:flex}#fireAiModal header{padding:12px 5px;display:flex;justify-content:space-between;gap:12px;align-items:center}#fireAiModal h2{font-size:18px;margin:0}#fireAiModal button{border:0;border-radius:10px;padding:12px;font-weight:800;cursor:pointer}#fireAiClose{background:#e34b4b;color:#fff}#fireAiView{position:relative;flex:none;width:min(100%,54dvh);aspect-ratio:1/1;min-height:0;max-height:52vh;align-self:center;overflow:hidden;background:#000;border-radius:14px}#fireAiVideo{width:100%;height:100%;object-fit:cover}#fireAiFrame{position:absolute;inset:10%;border:3px dashed #66d9ff;border-radius:14px;pointer-events:none}#fireAiMessage{font-size:16px;font-weight:750;line-height:1.5;background:#123452;padding:13px;margin:10px 0;border-radius:12px}#fireAiButtons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#fireAiButtons button{background:#1b6dd3;color:white}#fireAiButtons .secondary{background:#29425d}#fireAiResult{font-size:13px;color:#d6e8fa;margin:8px 0;line-height:1.5}#fireAiStill{display:none;width:min(100%,36dvh);aspect-ratio:1/1;object-fit:contain;margin:4px auto;background:#071523;border-radius:10px}
 </style>
-<section id="fireAiModal" role="dialog" aria-modal="true" aria-label="소방점검 카메라 안내"><header><h2 id="fireAiTitle">AI 카메라 점검</h2><button id="fireAiClose" type="button">닫기</button></header><div id="fireAiView"><video id="fireAiVideo" autoplay playsinline muted></video><div id="fireAiFrame"></div></div><div id="fireAiMessage" aria-live="polite">카메라를 준비하고 있습니다.</div><img id="fireAiStill" alt="촬영한 점검 사진" title="사진에서 확인할 설비 부분을 터치하세요"><div id="fireAiRegionHint" style="color:#b8e7ff;font-size:13px;margin:6px 0">소화기가 화면에 보인다면 가까이 다가가지 않아도 됩니다. 촬영 후 사진에서 소화기를 터치하면 원본 영역을 분석합니다.</div><div id="fireAiResult">사진을 촬영하면 이미지 인식 AI가 외관을 분석하고 근거를 음성으로 안내합니다. 불확실하면 재촬영을 요청합니다.</div><div id="fireAiButtons"><button type="button" id="fireAiCheck">촬영 상태 확인</button><button type="button" id="fireAiSnap">사진 촬영</button><button type="button" id="fireAiSpeak" class="secondary">음성 다시 듣기</button><button type="button" id="fireAiRetry" class="secondary">카메라 다시 연결</button><label id="fireAiPhotoFallback" style="display:block;background:#245e9c;color:white;padding:12px;border-radius:10px;text-align:center;cursor:pointer">카메라가 안 되면 사진 촬영·선택<input id="fireAiFile" type="file" accept="image/*" capture="environment" style="display:none"></label><button type="button" id="fireAiAnalyze" style="background:#1663d2">AI 사진 분석 시작</button><button type="button" id="fireAiRetake" class="secondary">다시 촬영</button><button type="button" id="fireAiGood" style="background:#15825c">분석 결과 확인: 정상</button><button type="button" id="fireAiBad" style="background:#b74747">분석 결과 확인: 불량</button></div><p style="font-size:12px;line-height:1.5;color:#b9cee2">※ 확대 분석은 원본 사진에 실제로 찍힌 세부 정보만 활용하며, 없는 정보를 복원하지 못합니다. 일반 CLIP 모델은 소방설비 탐지·정상·불량 판정용으로 검증되지 않았습니다. 인식 실패는 촬영 거리 부족을 의미하지 않습니다. 실험적 이미지 AI: 외관에 대한 참고 의견만 제공합니다. 소방설비의 기능·안전성을 인증하지 않으며, 확실하지 않으면 판단불가로 안내합니다. 모델은 최초 사용 시 인터넷에서 내려받고, 사진은 브라우저 안에서 처리합니다.</p></section>
+<section id="fireAiModal" role="dialog" aria-modal="true" aria-label="소방점검 카메라 안내"><header><h2 id="fireAiTitle">AI 카메라 점검</h2><button id="fireAiClose" type="button">닫기</button></header><div id="fireAiView"><video id="fireAiVideo" autoplay playsinline muted></video><div id="fireAiFrame"></div></div><div id="fireAiMessage" aria-live="polite">카메라를 준비하고 있습니다.</div><img id="fireAiStill" alt="촬영한 점검 사진" title="사진에서 확인할 설비 부분을 터치하세요"><div id="fireAiRegionHint" style="color:#b8e7ff;font-size:13px;margin:6px 0">멀리서 찍었다면 사진에서 확인할 설비 부분을 터치하면 해당 부분을 확대 분석합니다.</div><div id="fireAiResult">사진을 촬영하면 이미지 인식 AI가 외관을 분석하고 근거를 음성으로 안내합니다. 불확실하면 재촬영을 요청합니다.</div><div id="fireAiButtons"><button type="button" id="fireAiCheck">촬영 상태 확인</button><button type="button" id="fireAiSnap">사진 촬영</button><button type="button" id="fireAiSpeak" class="secondary">음성 다시 듣기</button><button type="button" id="fireAiRetry" class="secondary">카메라 다시 연결</button><label id="fireAiPhotoFallback" style="display:block;background:#245e9c;color:white;padding:12px;border-radius:10px;text-align:center;cursor:pointer">카메라가 안 되면 사진 촬영·선택<input id="fireAiFile" type="file" accept="image/*" capture="environment" style="display:none"></label><button type="button" id="fireAiAnalyze" style="background:#1663d2">AI 사진 분석 시작</button><button type="button" id="fireAiRetake" class="secondary">다시 촬영</button><button type="button" id="fireAiGood" style="background:#15825c">분석 결과 확인: 정상</button><button type="button" id="fireAiBad" style="background:#b74747">분석 결과 확인: 불량</button></div><p style="font-size:12px;line-height:1.5;color:#b9cee2">※ 확대 분석은 원본 사진에 실제로 찍힌 세부 정보만 활용하며, 없는 정보를 복원하지 못합니다. 일반 CLIP 모델은 소방설비 정상·불량 판정용으로 검증되지 않았습니다. 실험적 이미지 AI: 외관에 대한 참고 의견만 제공합니다. 소방설비의 기능·안전성을 인증하지 않으며, 확실하지 않으면 판단불가로 안내합니다. 모델은 최초 사용 시 인터넷에서 내려받고, 사진은 브라우저 안에서 처리합니다.</p></section>
 <script>
 (()=>{
 'use strict';
@@ -1770,17 +1770,15 @@ fireStill.addEventListener('click',event=>{
  document.getElementById('fireAiRegionHint').textContent='선택한 부분을 원본 사진에서 확대 분석합니다. 「AI 사진 분석 시작」을 눌러주세요.';
 });
 async function locateExtinguisher(model,src){
- // CLIP is a similarity classifier, not an object detector. Compare whole image
- // and several crops; never interpret a low score as proof of absence.
- const labels=['a photograph of a red portable fire extinguisher with handle and hose','a photograph of a room or wall with no fire extinguisher'];
- const positions=[null,{x:.5,y:.5},{x:.25,y:.35},{x:.75,y:.35},{x:.25,y:.7},{x:.75,y:.7}];
- let best={score:0,point:null,margin:-1};
+ const labels=['a photo of a red fire extinguisher cylinder','a photo without any fire extinguisher'];
+ const positions=[{x:.5,y:.5},{x:.25,y:.25},{x:.75,y:.25},{x:.25,y:.75},{x:.75,y:.75}];
+ let best={score:-1,point:null};
  for(const point of positions){
-  const photo=point?await detailCrop(src,point):await compactVisionPhoto(src);
-  const results=await model(photo,labels,{hypothesis_template:'{}'});
-  const yes=results.find(r=>r.label===labels[0])?.score||0;
-  const no=results.find(r=>r.label===labels[1])?.score||0;
-  if(yes-no>best.margin)best={score:yes,point,margin:yes-no};
+  const crop=await detailCrop(src,point);
+  const result=await model(crop,labels,{hypothesis_template:'This is {}.'});
+  const score=result.find(r=>r.label===labels[0])?.score||0;
+  if(score>best.score)best={score,point};
+  if(score>.92)break;
  }
  return best;
 }
@@ -1798,18 +1796,12 @@ async function analyze(){
   // Locate the extinguisher in distant photos before judging visible condition.
   // This is a coarse CLIP-based candidate search, NOT a trained object detector.
   if(idx<=3 && !focusPoint){
-   msg.textContent='전체 사진과 여러 영역에서 소화기 후보를 비교하고 있습니다…';
+   msg.textContent='사진에서 소화기가 있는 영역을 찾고 있습니다…';
    const location=await locateExtinguisher(model,latestPhoto);
    if(requestSession!==session)return;
-   // Never block inspection based on an uncalibrated CLIP similarity threshold.
-   // For a clearly positive candidate, use the selected crop. Otherwise preserve
-   // the entire photo and invite a manual selection without forcing a retake.
-   if(location.margin>.18){
-    focusPoint=location.point;
-    document.getElementById('fireAiRegionHint').textContent=location.point?'소화기 후보 영역을 분석합니다. 위치가 다르면 사진에서 소화기를 터치하세요.':'전체 사진에서 소화기 후보가 확인되었습니다. 필요한 경우 소화기를 터치해 확대 분석하세요.';
-   }else{
-    document.getElementById('fireAiRegionHint').textContent='소화기 위치를 확신할 수 없어 전체 사진으로 분석합니다. 소화기가 보인다면 사진에서 소화기를 터치한 후 재분석할 수 있습니다.';
-   }
+   if(location.score<.52){showAssessment('판단불가','소화기 위치를 충분히 확인하지 못했습니다. 소화기 전체가 잘 보이도록 촬영하거나 사진에서 소화기를 터치해 주세요.');return;}
+   focusPoint=location.point;
+   document.getElementById('fireAiRegionHint').textContent='AI가 소화기 후보 영역을 선택했습니다. 위치가 다르면 사진에서 소화기를 터치해 주세요.';
   }
   const result=await model(compactPhoto,labels,{hypothesis_template:'This is a photo of {}.'});if(requestSession!==session)return;
   let scores=Object.fromEntries(result.map(x=>[x.label,x.score]));
@@ -1829,9 +1821,15 @@ async function analyze(){
    scores=fineScores;
   }
   const good=scores[caseInfo.good]||0,bad=scores[caseInfo.bad]||0,other=scores[labels[2]]||0;
-  if(other>.18||Math.max(good,bad)<.82||Math.abs(good-bad)<.65){showAssessment('판단불가','사진에서 '+caseInfo.part+'의 정상·불량을 구분할 근거가 부족합니다. 소화기가 이미 보인다면 더 가까이 갈 필요 없이 사진에서 해당 부분을 터치해 재분석하거나 직접 확인해 주세요.');return}
+  // CLIP zero-shot scores are relative similarities, not calibrated defect probabilities.
+  // Avoid rejecting almost every clear extinguisher photo because of arbitrary .82/.65 gates.
+  const margin=Math.abs(good-bad);
+  const isCylinder=idx===1;
+  if(other>(isCylinder?.48:.30) || Math.max(good,bad)<(isCylinder?.42:.55) || margin<(isCylinder?.12:.25)){
+   showAssessment('판단불가','사진에서 '+caseInfo.part+'의 외관을 충분히 구별하지 못했습니다. '+caseInfo.detail+'');return;
+  }
   if(bad>good){showAssessment('불량 의심',caseInfo.part+'에서 손상 또는 이상으로 보이는 특징이 감지되었습니다. 다만 일반 이미지 분류 모델의 참고 의견이므로 실제 상태를 직접 확인하고 관리주체의 점검을 받으세요.');return}
-  showAssessment('정상 추정',caseInfo.part+'에서 뚜렷한 외관 이상은 인식되지 않았습니다. 사진에 보이는 범위의 참고 의견이며 실제 기능이나 안전성을 보증하지 않습니다.');
+  showAssessment('정상 추정',caseInfo.part+'에서 뚜렷한 외관 이상은 인식되지 않았습니다. '+(idx===1?'사진상 용기의 녹·찌그러짐·파손이 뚜렷하게 감지되지 않았다는 참고 의견입니다. ':'')+'사진에 보이는 범위의 참고 의견이며 실제 기능이나 안전성을 보증하지 않습니다.');
  }catch(err){if(requestSession===session)showAssessment('판단불가','AI 모델을 불러오거나 분석하지 못했습니다. 인터넷 연결을 확인해 주세요. '+caseInfo.detail)}
  finally{btn.disabled=false;btn.textContent='AI 사진 분석 시작'}
 }
@@ -1908,54 +1906,4 @@ document.getElementById('fireAiFile').addEventListener('change',e=>{
 });
 document.getElementById('fireAiGood').onclick=()=>choose('정상');document.getElementById('fireAiBad').onclick=()=>choose('불량');window.addEventListener('pagehide',stop);
 })();
-</script>
-<style id="fire-camera-navigation-fix">
-/* Mobile camera controls must never fall outside an unscrollable fullscreen dialog. */
-#fireAiModal.open{overflow-y:auto!important;overscroll-behavior:contain;min-height:0;max-height:100dvh;padding-bottom:max(12px,env(safe-area-inset-bottom))!important}
-#fireAiModal header{position:sticky;top:0;z-index:5;background:#071523;padding:9px 4px!important;flex-shrink:0}
-#fireAiView{width:min(100%,38dvh,360px)!important;max-height:34dvh!important;min-height:130px!important;aspect-ratio:4/3!important;flex-shrink:0!important}
-#fireAiMessage{font-size:14px!important;padding:9px 11px!important;margin:7px 0!important;flex-shrink:0}
-#fireAiRegionHint,#fireAiResult{font-size:12px!important;line-height:1.45!important;margin:5px 0!important;flex-shrink:0}
-#fireAiStill{width:min(100%,24dvh)!important;max-height:20dvh!important;aspect-ratio:4/3!important;flex-shrink:0}
-#fireAiButtons{position:sticky;bottom:0;z-index:10;flex-shrink:0;background:#10263e!important;border:1px solid #446482;border-radius:12px;padding:8px;box-shadow:0 -7px 22px #0009;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
-#fireAiButtons button,#fireAiPhotoFallback{font-size:13px!important;padding:10px 5px!important;min-height:42px;line-height:1.2;white-space:normal}
-#fireAiSnap{background:#00a58b!important;color:white!important;font-weight:900!important}
-#fireAiAnalyze{background:#1663d2!important;font-weight:900!important}
-#fireAiRetake{background:#f4d58b!important;color:#33250d!important;font-weight:900!important}
-#fireAiButtons button[hidden]{display:none!important}
-@media(max-height:720px){#fireAiView{max-height:26dvh!important;min-height:100px!important}#fireAiStill{max-height:13dvh!important}#fireAiButtons button,#fireAiPhotoFallback{min-height:36px;padding:7px 4px!important}}
-</style>
-<script id="fire-camera-navigation-script">
-(()=>{
- const modal=document.getElementById('fireAiModal');
- const snap=document.getElementById('fireAiSnap');
- const retake=document.getElementById('fireAiRetake');
- const analyze=document.getElementById('fireAiAnalyze');
- const file=document.getElementById('fireAiFile');
- const result=document.getElementById('fireAiResult');
- const message=document.getElementById('fireAiMessage');
- const still=document.getElementById('fireAiStill');
- const buttons=document.getElementById('fireAiButtons');
- if(!modal||!snap||!retake||!analyze||!buttons)return;
- const guide=document.createElement('div');guide.id='fireAiNextStep';guide.setAttribute('role','status');
- guide.style.cssText='background:#fff4cb;color:#493713;border-radius:9px;padding:9px 11px;font-size:13px;font-weight:800;line-height:1.5;display:none;flex-shrink:0';
- buttons.before(guide);
- const refresh=()=>{
-  const hasPhoto=!!still.src && still.style.display!=='none';
-  guide.style.display=hasPhoto?'block':'none';
-  guide.textContent=hasPhoto?'📸 촬영 완료! 아래 「AI 사진 분석 시작」을 누르세요. 다시 찍으려면 「다시 촬영」을 누르세요.':'';
-  analyze.style.outline=hasPhoto?'3px solid #85d8ff':'';
-  retake.style.outline=hasPhoto?'2px solid #fff':'';
- };
- const scrollControls=()=>{refresh();if(modal.classList.contains('open'))buttons.scrollIntoView({block:'end',behavior:'smooth'});};
- snap.addEventListener('click',()=>setTimeout(scrollControls,80));
- file?.addEventListener('change',()=>setTimeout(scrollControls,450));
- retake.addEventListener('click',()=>{guide.style.display='none';result.textContent='카메라 화면에서 다시 촬영할 수 있습니다. 아래 초록색 「사진 촬영」 버튼을 누르세요.';setTimeout(()=>snap.scrollIntoView({block:'nearest',behavior:'smooth'}),30);});
- analyze.addEventListener('click',()=>{guide.style.display='none';setTimeout(()=>buttons.scrollIntoView({block:'end',behavior:'smooth'}),30);});
- const observer=new MutationObserver(()=>{if(modal.classList.contains('open'))refresh();});
- observer.observe(still,{attributes:true,attributeFilter:['style','src']});
- const opened=new MutationObserver(()=>{if(modal.classList.contains('open')){setTimeout(()=>{refresh();snap.scrollIntoView({block:'nearest'});},250)}else{guide.style.display='none'}});
- opened.observe(modal,{attributes:true,attributeFilter:['class']});
-})();
-</script>
-</body></html>
+</script></body></html>
