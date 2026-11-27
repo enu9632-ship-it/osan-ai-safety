@@ -256,12 +256,12 @@ function estimateLabel(r){
  return e?'AI 영상 기반 가정값 약 '+e.mm.toFixed(2)+' mm (범위 예시 '+e.low.toFixed(2)+'~'+e.high.toFixed(2)+' mm) · 촬영거리 20cm 가정 · 실제 측정 아님 · 실측값으로 수정 필요':'';
 }
 function widthDisplay(r){if(r.width!==null&&r.width!==undefined)return '실측 입력값 '+Number(r.width).toFixed(2)+' mm';if(r.pixelWidth!=null)return estimateLabel(r)+' / 영상상 '+Number(r.pixelWidth).toFixed(1)+' px';if(r.finding==='균열 의심')return 'mm 미측정 · 기준 거리 보정 필요';return ''}
-function recordPhotoHtml(r,i){return r.photo?`<button class="record-photo-btn" onclick="openPhotoViewer(${i})" aria-label="${i+1}번 점검 사진 크게 보기"><img class="preview" alt="${esc(r.area)} 균열 의심 촬영 사진" src="${r.photo}"><span>↗ 사진 크게 보기 · 표시된 균열 후보 확인</span></button>`:''}
+function recordPhotoHtml(r,i){return r.photo?`<button class="record-photo-btn" onclick="openPhotoViewer(${i})" aria-label="${i+1}번 점검 사진 크게 보기"><img class="preview" alt="${esc(r.area)} 균열 의심 촬영 사진" src="${r.photo}"><span>↗ 사진 크게 보기 · 표시된 손상 후보 확인</span></button>`:''}
 function openPhotoViewer(i){const r=records[i];if(!r?.photo)return;const modal=$('photoViewer');$('photoViewerImage').src=r.photo;$('photoViewerTitle').textContent=r.area+' · '+r.finding;$('photoViewerMeasure').textContent=widthDisplay(r)||'측정값 없음';modal.classList.add('show');document.body.style.overflow='hidden'}
 function closePhotoViewer(){const modal=$('photoViewer');modal.classList.remove('show');$('photoViewerImage').removeAttribute('src');document.body.style.overflow=''}
 function renderRecords(){$('count').textContent=records.length;$('records').innerHTML=records.length?records.map((r,i)=>`<div class="record"><strong>${i+1}. ${r.source==='ai'?'[AI 의심 · 미확인] ':'[직접 기록] '}${esc(r.area)} · ${esc(r.finding)}</strong><p>${widthDisplay(r)?'<b>'+esc(widthDisplay(r))+'</b><br>':''}${esc(r.memo||'메모 없음')}</p>${recordPhotoHtml(r,i)}<button class="btn danger" style="padding:6px 9px;font-size:11px" onclick="removeRecord(${i})">삭제</button></div>`).join(''):'<p class="muted">아직 기록이 없습니다.</p>'}
 function removeRecord(i){records.splice(i,1);renderRecords()}
-function finish(){const completed=records.filter(r=>r.inspectionComplete===true);$('report').dataset.lastShown='yes';$('rbuilding').textContent=building.name;$('rcount').textContent=completed.length+'건 (1·2차 정밀분석 완료)';$('rdate').textContent=new Date().toLocaleString('ko-KR');$('reportRecords').innerHTML=completed.length?completed.map((r,i)=>`<div class="record"><strong>${i+1}. ${r.source==='ai'?'[AI 의심 · 미확인] ':'[직접 기록] '}${esc(r.area)} · ${esc(r.finding)}</strong><p>${new Date(r.at).toLocaleString('ko-KR')}<br>${widthDisplay(r)?'<b>'+esc(widthDisplay(r))+'</b><br>':''}${esc(r.memo||'')}</p>${recordPhotoHtml(r,records.indexOf(r))}</div>`).join(''):'<p class="muted">기록된 관찰사항이 없습니다.</p>';go('report');generateAISummary()}
+function finish(){const completed=records.filter(r=>r.inspectionComplete===true);$('report').dataset.lastShown='yes';$('rbuilding').textContent=building.name;$('rcount').textContent=completed.length+'건 (저장된 점검 기록)';$('rdate').textContent=new Date().toLocaleString('ko-KR');$('reportRecords').innerHTML=completed.length?completed.map((r,i)=>`<div class="record"><strong>${i+1}. ${r.source==='ai'?'[AI 의심 · 미확인] ':'[직접 기록] '}${esc(r.area)} · ${esc(r.finding)}</strong><p>${new Date(r.at).toLocaleString('ko-KR')}<br>${widthDisplay(r)?'<b>'+esc(widthDisplay(r))+'</b><br>':''}${esc(r.memo||'')}</p>${recordPhotoHtml(r,records.indexOf(r))}</div>`).join(''):'<p class="muted">기록된 관찰사항이 없습니다.</p>';go('report');generateAISummary()}
 function renderCitizenGuide(findings,cracks,serious){
  const root=$('citizenGuide');if(!root)return;
  const items=[];
@@ -761,19 +761,20 @@ function submitExpertRequest(){
      'close-up photograph of concrete with orange brown paint or dirt stain but no exposed metal',
      'close-up photograph of concrete wall with a dark shadow and no damage'
     ];
-    const ds=await model(shot.image,defectPrompts,{topk:4});
+    const ds=await model(shot.image,defectPrompts,{topk:6});
     if(!liveEnabled||run!==session)return;
     const scores=Object.fromEntries(ds.map(x=>[x.label,x.score]));
     const sp=(scores[defectPrompts[0]]||0),spBase=(scores[defectPrompts[1]]||0);
     const ru=(scores[defectPrompts[2]]||0),ruBase=(scores[defectPrompts[3]]||0);
-    const spall=sp>0.46&&sp>spBase*1.8&&sp>ru*1.12;
-    const rust=ru>0.46&&ru>ruBase*1.8&&ru>(scores[defectPrompts[4]]||0)*1.5;
+    const spall=sp>0.25&&sp>spBase*1.25;
+    const rust=ru>0.25&&ru>ruBase*1.25&&ru>(scores[defectPrompts[4]]||0)*1.1;
     defectClassHits.spall=spall?Math.min(4,defectClassHits.spall+1):Math.max(0,defectClassHits.spall-1);
     defectClassHits.rust=rust?Math.min(4,defectClassHits.rust+1):Math.max(0,defectClassHits.rust-1);
     if(defectClassHits.spall>=3){
       addAutoFinding('콘크리트 박락 의심','범용 이미지 AI에서 박락 사진과의 유사도가 3회 이상 높게 나타남(전용 탐지 모델 아님 · 오탐 가능)');
       if(crackHits<2)msg='콘크리트가 떨어져 나온 것으로 의심되는 부분이 보입니다. 가까이 비춰 확인해 주세요.';
-    }else if(defectClassHits.rust>=3){
+    }
+    if(defectClassHits.rust>=3){
       addAutoFinding('부식 의심','범용 이미지 AI에서 부식 사진과의 유사도가 3회 이상 높게 나타남(전용 탐지 모델 아님 · 오탐 가능)');
       if(crackHits<2)msg='녹이나 부식으로 의심되는 부분이 보입니다. 가까이 비춰 확인해 주세요.';
     }
@@ -1351,6 +1352,25 @@ async function refineScanPreview(imageUrl,job,frames){
  $('scanPreviewDesc').textContent=found?'1차 영상 종합분석 완료. 여러 프레임에서 반복 탐지된 빨간색 의심 영역을 터치하면 해당 위치를 확대 재분석합니다. 콘센트·전선 등 오탐은 여전히 가능합니다.':'뚜렷한 균열 후보가 없습니다. 균열이 없다는 뜻은 아니며 재점검을 권장합니다.';
  return true;
 }
+
+let extraDamageJob=0,extraDamage=[];
+function extraPanel(){let p=$('extraDamagePanel');if(!p){p=document.createElement('section');p.id='extraDamagePanel';p.style.cssText='background:#fff;color:#172554;border:1px solid #cbd5e1;border-radius:12px;padding:12px;margin:10px 0';$('scanSelectionStatus').insertAdjacentElement('afterend',p);}return p;}
+function extraCrop(im,x,y,w,h){const c=document.createElement('canvas');c.width=224;c.height=224;c.getContext('2d').drawImage(im,x,y,w,h,0,0,224,224);return c;}
+async function extraAnalyze(url,job){
+ const token=++extraDamageJob,p=extraPanel();extraDamage=[];p.innerHTML='<b>박락·부식 별도 분석 중…</b><p>전체 사진과 4개 구역을 독립적으로 비교합니다.</p>';
+ const valid=()=>token===extraDamageJob&&job===scanPreviewJob&&scanPreviewOpen;
+ try{const im=new Image();im.src=url;await im.decode();while(liveBusy&&valid())await new Promise(r=>setTimeout(r,100));if(!valid())return;
+ const model=await ensureModel();if(!valid())return;
+ const W=im.naturalWidth,H=im.naturalHeight,regions=[[0,0,W,H]];for(let y=0;y<2;y++)for(let x=0;x<2;x++)regions.push([x*W*.42,y*H*.42,W*.58,H*.58]);
+ const specs=[{name:'콘크리트 박락 의심',color:'#eab308',labels:['concrete spalling with missing concrete chunks and exposed coarse aggregate','intact concrete surface with no missing material','paint peeling or superficial dirt on concrete without concrete loss']},{name:'부식 의심',color:'#16a34a',labels:['exposed rusty steel reinforcement with orange brown corrosion','clean metal or concrete without rust','orange brown paint or dirt stain without metal corrosion']}];
+ for(const spec of specs){let best=null;for(const r of regions){if(!valid())return;const c=extraCrop(im,...r);const result=await model(c.toDataURL('image/jpeg',.92),spec.labels,{topk:3});if(!valid())return;const scores=Object.fromEntries(result.map(v=>[v.label,v.score]));const a=scores[spec.labels[0]]||0,b=Math.max(scores[spec.labels[1]]||0,scores[spec.labels[2]]||0);if(a>=.40&&a>b*1.12&&(!best||a-b>best.margin))best={r,margin:a-b};}
+ if(best){const [x,y,w,h]=best.r;const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');ctx.drawImage(im,0,0);ctx.strokeStyle=spec.color;ctx.lineWidth=Math.max(3,W/180);ctx.strokeRect(x+2,y+2,w-4,h-4);extraDamage.push({name:spec.name,photo:c.toDataURL('image/jpeg',.88),raw:url});}}
+ if(!valid())return;
+ p.innerHTML='<b>박락·부식 독립 분석 결과</b><p style="font-size:12px">범용 이미지 AI의 구역별 유사도 비교입니다. 전용 탐지 모델이나 정확한 손상 경계가 아니며, 미탐지 시에도 안전을 보증하지 않습니다.</p>'+specs.map(v=>{const d=extraDamage.find(a=>a.name===v.name);return '<div style="margin:8px 0;padding:8px;border:1px solid #cbd5e1;border-radius:8px"><b style="color:'+v.color+'">'+v.name.replace(' 의심','')+'</b> · '+(d?'의심 후보 확인<img style="width:100%;max-height:200px;object-fit:contain" src="'+d.photo+'">':'뚜렷한 후보 미확인')+'</div>';}).join('')+(extraDamage.length?'<button type="button" class="btn" onclick="saveExtraDamage()">박락·부식 의심 기록 저장</button>':'');
+ }catch(e){if(valid())p.textContent='박락·부식 분석 미완료: '+String(e.message||e).slice(0,100)+' · 재점검 필요';}
+}
+function saveExtraDamage(){if(!scanPreviewOpen||!extraDamage.length)return;for(const d of extraDamage){if(records.some(r=>r.extraJob===extraDamageJob&&r.finding===d.name))continue;records.push({id:Date.now()+Math.random(),area,finding:d.name,memo:'범용 AI 구역별 비교에서 확인된 의심 후보 · 전문가 현장 확인 필요 · 균열 2차 분석과 별도',width:null,at:new Date().toISOString(),photo:d.photo,source:'manual',inspectionComplete:true,verified:false,extraJob:extraDamageJob});}renderRecords();const p=$('extraDamagePanel');if(p){const b=p.querySelector('button');if(b){b.disabled=true;b.textContent='의심 기록 저장 완료';}if(!p.querySelector('[data-extra-finish]')){const f=document.createElement('button');f.className='btn';f.dataset.extraFinish='1';f.textContent='저장한 손상 결과 보기';f.onclick=()=>{if(scanPreviewRefining){alert('균열 분석 완료 후 확인해 주세요.');return;}continueScanPreview();stopLive(false);finish();};p.appendChild(f);}}}
+
 function showScanPreview(analyzed){
  analysisProgressStop();voiceStop();disableLineTest();
  // v67: Pause the live inference loop before the still-photo first pass.
@@ -1360,6 +1380,8 @@ function showScanPreview(analyzed){
  if(scanPreviewOpen)return;
  $('scanPreview').classList.remove('result-ready');$('secondScanResults').classList.remove('show');$('secondScanResultImage').removeAttribute('src');chosenCracks=[];secondPassDetails=[];const capturedFrames=observationFrames.slice();scanPreviewImage=capturedFrames.length?capturedFrames[capturedFrames.length-1]:scanPreviewCapture(false);scanPreviewOpen=true;scanConfirmed=false;scanOriginalPhoto=null;scanCandidateCanvas=null;scanSelectedPhoto=null;scanSelectedMask=null;scanSelectedPoint=null;setScanSaveEnabled(false);$('scanSelectionStatus').textContent='1차 정밀분석 중입니다. 완료 후 빨간색 후보를 터치하세요.';$('refineProgress').classList.remove('show','analysis-error');
  const job=++scanPreviewJob;
+ extraDamageJob++;extraDamage=[];extraPanel().textContent='박락·부식 별도 분석 준비 중';
+ if(scanPreviewImage)extraAnalyze(scanPreviewImage,job);
  $('scanPreviewPhoto').src=scanPreviewImage||'';
  scanEstimatedPx=null;scanEstimatedMm=null;$('scanWidthEstimate').style.display='none';
  $('scanPreviewTitle').firstChild.textContent=analyzed?'3초 관찰 결과 ':'3초 관찰 완료 · AI 분석 미확인 ';
@@ -1637,6 +1659,7 @@ function discardAndContinueScanPreview(){
  renderRecords();continueScanPreview();
 }
 function continueScanPreview(){
+ extraDamageJob++;extraDamage=[];if($('extraDamagePanel'))$('extraDamagePanel').remove();
  const touch=$('scanTouchCanvas');if(touch)touch.getContext('2d').clearRect(0,0,touch.width,touch.height);
  scanPreviewJob++;chosenCracks=[];secondPassDetails=[];scanConfirmed=false;scanSelectedPhoto=null;scanCandidateCanvas=null;scanOriginalPhoto=null;scanPreviewRefining=false;$('refineProgress').classList.remove('show');$('scanPreview').classList.remove('show');$('scanPreview').classList.remove('select-fullscreen','result-ready');scanPreviewOpen=false;scanPreviewImage=null;scanEstimatedPx=null;scanEstimatedMm=null;
  nearCheckBaseline=null;nearCheckCooldown=0;crackCandidate=null;crackStable=0;overlaySmoothCenter=null;
