@@ -267,16 +267,31 @@ function observedCrackShape(r){
  const pts=r.selection?.component, w=scanCandidateCanvas?.width;if(!pts||pts.length<10||!w)return null;
  let x=0,y=0,xx=0,yy=0,xy=0;for(const p of pts){const a=p%w,b=Math.floor(p/w);x+=a;y+=b;xx+=a*a;yy+=b*b;xy+=a*b;}const n=pts.length,A=xx/n-(x/n)**2,B=yy/n-(y/n)**2,C=xy/n-x*y/n/n;const d=Math.hypot(A-B,2*C);if(A+B<=0||d/(A+B)<.45)return '불규칙';const a=Math.abs(Math.atan2(2*C,A-B)*90/Math.PI);return a<22.5?'수평':a>67.5?'수직':'대각선';
 }
+function crackVisualMetrics(r){
+ const pts=r.selection?.component||[],w=scanCandidateCanvas?.width,h=scanCandidateCanvas?.height;
+ if(!pts.length||!w||!h)return null;
+ let x0=w,y0=h,x1=0,y1=0;for(const p of pts){const x=p%w,y=Math.floor(p/w);x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
+ const span=Math.hypot(x1-x0,y1-y0);if(span<5)return null;
+ return {spanRatio:span/Math.hypot(w,h),relativeThickness:pts.length/Math.max(1,span*span),edge:x0<=2||y0<=2||x1>=w-3||y1>=h-3};
+}
 function citizenAssessment(findings,cracks,serious){
- const flags=[...new Set(cracks.flatMap(r=>r.observation?.flags||[]))];const shapes=[...new Set(cracks.map(r=>r.observation?.direction||r.shape).filter(x=>x&&x!=='unknown'))].map(x=>({vertical:'수직',horizontal:'수평',diagonal:'대각선',network:'불규칙'}[x]||x));
- const widths=cracks.map(r=>r.observation?.width??r.width).filter(x=>x!=null&&Number.isFinite(Number(x)));const lengths=cracks.map(r=>r.observation?.length).filter(x=>x!=null&&Number.isFinite(Number(x)));const structural=cracks.some(r=>/기둥|옹벽|천장/.test(r.area)||['structural','retaining'].includes(r.observation?.location));
- const rapid=flags.includes('rapid')||flags.includes('displacement')||findings.some(r=>/처짐|기울어짐/.test(r.finding));const growing=flags.includes('growing');const concern=serious.length||structural||growing||flags.includes('spalling')||flags.includes('water')||shapes.includes('대각선')||widths.some(x=>x>=.3);
- const types=[...new Set(findings.map(r=>r.finding))].join(', ');let description=cracks.length?(shapes.length?shapes.join('·')+' 방향의 균열 후보가 관찰됩니다. ':'균열 후보가 관찰됩니다. ')+(widths.length?'기록된 참고 폭 최대 '+Math.max(...widths).toFixed(2)+'mm. ':'실제 폭은 확인되지 않았습니다. ')+(lengths.length?'참고 직선 길이 최대 '+(Math.max(...lengths)/10).toFixed(1)+'cm. ':''):types?types+' 징후가 기록되었습니다. ':'';
- if(serious.length&&cracks.length)description+='균열 외 '+[...new Set(serious.map(r=>r.finding))].join(', ')+' 징후도 기록되었습니다. ';
- if(rapid)return {grade:'신속한 현장 확인',color:'danger',text:description+'급격한 변화 또는 변형 징후가 있어 신속한 현장 확인이 필요합니다.',steps:['손상 부위와 아래쪽 접근을 피하세요.','관리주체에 즉시 알리고 전문가 확인을 요청하세요.','낙하·붕괴 위험이 급박하면 119에 신고하세요.']};
- if(concern)return {grade:'전문가 확인 권장',color:'warn',text:description+'손상 위치·형태 또는 동반 징후를 고려하면 전문가 확인을 권장합니다. 사진만으로 구조적 위험도는 확정할 수 없습니다.',steps:['안전한 거리에서 사진을 기록하고 관리주체에 알리세요.','전문가에게 현장 확인을 요청하세요.','급격한 확대나 낙하 위험이 있으면 접근하지 마세요.']};
- if(findings.length)return {grade:'경과 관찰 및 추가 확인',color:'normal',text:description+'현재 기록만으로 긴급성은 판단하기 어렵습니다. 주요 구조부 손상이나 변형이 없는지 확인하고, 동일 위치의 폭·길이 변화를 비교하세요.',steps:['안전한 위치에서 오늘 사진과 날짜를 기록하세요.','변화가 없다면 1~2주 후 같은 위치를 다시 촬영하세요.','확대·단차·누수 또는 주요 구조부 손상이 확인되면 기다리지 말고 전문가에게 문의하세요.']};
- return {grade:'안전 여부 미판정',color:'unknown',text:'저장된 이상 의심 기록이 없습니다. 촬영 범위 밖의 손상이나 미탐지 가능성이 있으므로 안전을 보증하지 않습니다.',steps:['새로운 손상이나 변화를 관찰하세요.','이상이 발견되면 관리주체에 알리세요.']};
+ const flags=[...new Set(cracks.flatMap(r=>r.observation?.flags||[]))];
+ const shapes=[...new Set(cracks.map(r=>r.observation?.direction||r.shape).filter(x=>x&&x!=='unknown').map(x=>({vertical:'수직',horizontal:'수평',diagonal:'대각선',network:'불규칙'}[x]||x)))];
+ const widths=cracks.map(r=>r.observation?.width??r.width).filter(x=>x!=null&&Number.isFinite(Number(x)));
+ const metrics=cracks.map(r=>r.visualMetrics).filter(Boolean);
+ const thin=metrics.length===cracks.length&&metrics.length>0&&metrics.every(m=>m.relativeThickness<.045);
+ const local=metrics.length===cracks.length&&metrics.length>0&&metrics.every(m=>m.spanRatio<.35&&!m.edge);
+ const extensive=metrics.some(m=>m.spanRatio>=.65||m.edge);
+ const structural=cracks.some(r=>/기둥|옹벽|천장|외벽/.test(r.area)||['structural','retaining'].includes(r.observation?.location));
+ const rapid=flags.includes('rapid')||flags.includes('displacement')||findings.some(r=>/처짐|기울어짐/.test(r.finding));
+ const reasons=[];if(structural)reasons.push('주요 구조부 또는 낙하 우려 위치');if(shapes.includes('대각선')||shapes.includes('불규칙'))reasons.push('대각선·불규칙 형태');if(extensive)reasons.push('촬영 범위에 길게 이어지는 형태');if(widths.some(x=>x>=.3))reasons.push('기록된 폭 0.3mm 이상');if(flags.includes('growing'))reasons.push('균열 확대');if(flags.includes('water'))reasons.push('누수');if(serious.length||flags.includes('spalling'))reasons.push('박락·부식 등 동반 손상');if(cracks.length>1)reasons.push('여러 균열');
+ const desc=cracks.length?`${[...new Set(cracks.map(r=>r.area))].join('·')}에서 ${thin?'영상상 가느다란 ':''}${local?'국부적인 ':''}${shapes.length?shapes.join('·')+' 형태의 ':''}균열 ${cracks.length}건이 관찰됩니다. `:'';
+ const width=widths.length?`기록된 최대 폭은 ${Math.max(...widths).toFixed(2)}mm입니다. `:'';
+ if(rapid)return {grade:'신속한 현장 확인',color:'danger',text:desc+'급격한 변화나 변형 징후가 있어 즉시 현장 확인이 필요합니다.',steps:['손상 부위 접근을 피하세요.','관리주체에 즉시 알리세요.','붕괴·낙하 위험이 급박하면 119에 신고하세요.']};
+ if(reasons.length||serious.length)return {grade:'전문가 점검 권장',color:'warn',text:desc+width+reasons.join(', ')+' 징후를 고려하면 단순 경과 관찰보다 전문가의 현장 확인을 우선 권장합니다.',steps:['사진을 관리주체에 전달하세요.','전문가 현장 확인을 요청하세요.','급격한 변화나 낙하 위험이 있으면 접근하지 마세요.']};
+ if(cracks.length)return {grade:thin&&local?'뚜렷한 고위험 징후 미관찰':'균열 경과 관찰 권장',color:'normal',text:desc+width+(thin&&local?'촬영된 균열 형태에서는 뚜렷한 고위험 징후가 보이지 않습니다. ':'현재 기록에서는 변형이나 복합 손상 등 별도의 경고 징후가 확인되지 않았습니다. ')+ '관리주체에 알리고 실제 폭을 확인한 뒤, 같은 위치를 1~2주 후 다시 촬영해 폭과 길이가 늘어나는지 비교하는 것이 좋겠습니다. 구조부 균열이나 확대가 확인되면 즉시 전문가에게 문의하세요.',steps:['오늘 사진과 균열 위치를 기록하세요.','1~2주 후 같은 위치에서 폭·길이를 비교하세요.','균열 확대·단차·누수가 보이면 즉시 전문가에게 문의하세요.']};
+ if(findings.length)return {grade:'관리주체 확인 권장',color:'warn',text:findings.map(r=>r.finding).join(', ')+' 징후가 관찰됩니다. 관리주체에 사진을 전달하고 손상 원인을 확인하세요.',steps:['사진을 기록하세요.','관리주체에 확인을 요청하세요.']};
+ return {grade:'특이 징후 미관찰',color:'unknown',text:'촬영 범위에서 기록된 손상 후보가 없습니다. 새로운 손상이나 변화가 생기는지 살펴보세요.',steps:['새로운 손상이나 변화를 관찰하세요.','이상이 발견되면 관리주체에 알리세요.']};
 }
 function generateAISummary(){
  const badge=$('riskBadge'),txt=$('aiSummary'),details=$('aiDetails'),expert=$('requestExpertRisk');
@@ -1652,7 +1667,7 @@ async function saveAndContinueScanPreview(){
  if(scanPreviewRefining||!scanConfirmed||!secondPassDetails.length||!scanSelectedPhoto){alert('3초 관찰과 1·2차 정밀분석을 완료한 후 저장해 주세요.');return;}
  const activeJob=scanPreviewJob;await extraPending;if(activeJob!==scanPreviewJob||!scanPreviewOpen)return false;saveExtraDamage();
  for(let i=records.length-1;i>=0;i--)if(!scanCycleRecordIds.has(records[i].id)&&records[i].source==='ai')records.splice(i,1);
- secondPassDetails.forEach((r,i)=>records.push({id:Date.now()+Math.random()+i,area,finding:'균열 의심',memo:'사용자 선택 후보 '+(i+1)+' · 2차 확대 분석 · AI 가정 폭 '+(r.mm===null?'추정 불가':r.mm.toFixed(2)+'mm')+' · 실측 필요',width:null,shape:observedCrackShape(r),observation:secondPassDetails.length===1&&window.osanCrackObservation?{...window.osanCrackObservation}:null,pixelWidth:r.pixelWidth,measurementStatus:'가정 추정 · 실측 아님',at:new Date().toISOString(),photo:scanSelectedPhoto,rawPhoto:scanOriginalPhoto,source:'manual',inspectionComplete:true,verified:false}));
+ secondPassDetails.forEach((r,i)=>records.push({id:Date.now()+Math.random()+i,area,finding:'균열 의심',memo:'사용자 선택 후보 '+(i+1)+' · 2차 확대 분석 · AI 가정 폭 '+(r.mm===null?'추정 불가':r.mm.toFixed(2)+'mm')+' · 실측 필요',width:null,shape:observedCrackShape(r),visualMetrics:crackVisualMetrics(r),observation:secondPassDetails.length===1&&window.osanCrackObservation?{...window.osanCrackObservation}:null,pixelWidth:r.pixelWidth,measurementStatus:'가정 추정 · 실측 아님',at:new Date().toISOString(),photo:scanSelectedPhoto,rawPhoto:scanOriginalPhoto,source:'manual',inspectionComplete:true,verified:false}));
  storeLocalScanFeedback("suspected_crack_saved");renderRecords();continueScanPreview();return true;
 }
 function discardAndContinueScanPreview(){
